@@ -57,7 +57,7 @@ class Serveur:
                 token = donnees.split()
                 print "Serveur recoit : ", donnees
 
-                if (token[1] == "GetToken"):
+                if (donnees[:7] == "GetToken"):
                     # Generation de B de la meme sorte que A
                     B = random.randint(0, (1 << 32) - 1)
                     token = donnees.split()
