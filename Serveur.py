@@ -49,31 +49,32 @@ class Serveur:
     #       TX  :   Connected B
     #
     def gestionMessages(self):
-
         while(True):
-            print "En attente de clients ..."
-            donnees = self.serveur.recv()
-            self.clients[donnees] = 0
-            print "Serveur recoit : ", donnees
+            try:
+                print "En attente de clients ..."
+                donnees = self.serveur.recv()
+                self.clients[donnees] = 0
+                token = donnees.split()
+                print "Serveur recoit : ", donnees
 
-            # Generation de B de la meme sorte que A
-            B = random.randint(0, (1 << 32) - 1)
-            token = donnees.split()
-            A = token[1]
+                if (token[1] == "GetToken"):
+                    # Generation de B de la meme sorte que A
+                    B = random.randint(0, (1 << 32) - 1)
+                    token = donnees.split()
+                    A = token[1]
 
-            self.serveur.send("Token " + str(B) + " " + str(A) + " " + str(PNUM), SEQUENCE_OUTBAND)
-            print "Serveur envoi : Token ", B, " ", A, " ", PNUM
+                    self.serveur.send("Token " + str(B) + " " + str(A) + " " + str(PNUM), SEQUENCE_OUTBAND)
+                    print "Serveur envoi : Token ", B, " ", A, " ", PNUM
 
-            donnees = self.serveur.recv()
-            print "Serveur recoit : ", donnees
+                elif(token[1] == "Connect"):
+                    separateur = token[1].split('/')
 
-            token = donnees.split()
-            separateur = token[1].split('/')
+                    # Control de la valeur de B
+                    if ((len(separateur) < 3) or (int(B) != int(separateur[2]))):
+                        print "Suivant...!"
+                        continue
 
-            # Control de la valeur de B
-            if ((len(separateur) < 3) or (int(B) != int(separateur[2]))):
-                print "Suivant...!"
-                continue
-
-            self.serveur.send("Connected " + str(B), donnees, SEQUENCE_OUTBAND)
-            print "Serveur envoi : Connected ", B
+                    self.serveur.send("Connected " + str(B), donnees, SEQUENCE_OUTBAND)
+                    print "Serveur envoi : Connected ", B
+            except:
+                print "Erreur dans la gestion des messages..."
