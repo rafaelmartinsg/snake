@@ -55,7 +55,7 @@ class Client(snakeChannel):
                 if (etat == 0):
                     self.socket.connect((self.addIP, self.nPort))
                     print 'Connexion du client...'
-                    self.envoi("GetToken " + str(A) + " Snake", (self.addIP, self.nPort), SEQUENCE_OUTBAND)
+                    self.envoi("GetToken " + str(A) + " Snake", (self.addIP, self.nPort), None)
                     print "Client envoi : GetToken", A
                     etat += 1
                 # Si etat 1

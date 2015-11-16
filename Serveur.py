@@ -63,7 +63,7 @@ class Serveur(snakeChannel):
                     token = donnees.split()
                     A = token[1]
 
-                    self.serveur.send("Token " + str(B) + " " + str(A) + " " + str(PNUM), SEQUENCE_OUTBAND)
+                    self.envoi("Token " + str(B) + " " + str(A) + " " + str(PNUM), (self.addIp, self.nPort),SEQUENCE_OUTBAND)
                     print "Serveur envoi : Token ", B, " ", A, " ", PNUM
 
                 elif(token[1] == "Connect"):
@@ -74,7 +74,7 @@ class Serveur(snakeChannel):
                         print "Suivant...!"
                         continue
 
-                    self.serveur.send("Connected " + str(B), donnees, SEQUENCE_OUTBAND)
+                    self.envoi("Connected " + str(B), (self.addIp, self.nPort), SEQUENCE_OUTBAND)
                     print "Serveur envoi : Connected ", B
             except:
                 print "Erreur dans la gestion des messages..."
