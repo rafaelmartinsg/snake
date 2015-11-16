@@ -33,7 +33,7 @@ BUFFER_SIZE = 4096
 #s.close  # fermeture du socket
 
 #class client
-class Client:
+class Client(snakeChannel):
     #constructeur de la class Client
     def __init__(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

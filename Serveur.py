@@ -28,7 +28,7 @@ SEQUENCE_OUTBAND = 0xffffff
 
 # Declaration de variables globales
 
-class Serveur:
+class Serveur(snakeChannel):
     def __init__(self, addIp=UDP_ADD_IP, nPort=UDP_NUM_PORT):
         self.clients = {}
         #self.outputs = [] a voir si nécessaire

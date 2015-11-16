@@ -24,14 +24,13 @@ SEQUENCE_OUTBAND = 0xffffff
 
 #class snakeChannel
 class snakeChannel:
-    def __init__(self):
+    def __init__(self, hostSocket):
+        self.s = hostSocket
+        self.connexions = {}
 
+    def reception(self):
+        return self.s.recv(BUFFER_SIZE)
 
-
-    def recv(socket,data):
-       socket.recvfrom(data)
-    def send(self):
+    def envoi(self, data, ipDest, portDest):
+        socket.socket.sendto(data, (ipDest, portDest))
         pass
-
-
-
