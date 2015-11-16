@@ -40,7 +40,7 @@ class Client:
         self.addIP = UDP_ADD_IP
         self.nPort = UDP_NUM_PORT
         self.socket.settimeout(10) # definit le timeout
-        self.socket.connect()
+        self.socket.connect((self.addIP,self.nPort))
 
     #
     #   connexion est la methode qui permettra au client de se connecter au serveur
