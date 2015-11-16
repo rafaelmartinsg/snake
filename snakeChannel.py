@@ -14,12 +14,13 @@
 # ##############################################################################
 import socket  # Import socket module
 import random
+import json
 
 # Constantes
-UDP_ADD_IP = "127.0.0.1"
-UDP_NUM_PORT = 7777
+#UDP_ADD_IP = "127.0.0.1"
+#UDP_NUM_PORT = 7777
 BUFFER_SIZE = 4096
-PNUM = 19 # meme valeur que dans enonce
+#PNUM = 19 # meme valeur que dans enonce
 SEQUENCE_OUTBAND = 0xffffff
 
 #class snakeChannel
@@ -31,6 +32,22 @@ class snakeChannel:
     def reception(self):
         return self.s.recv(BUFFER_SIZE)
 
-    def envoi(self, data, ipDest, portDest):
-        socket.socket.sendto(data, (ipDest, portDest))
-        pass
+    #
+    #   envoi
+    #
+    #   Parametres  :   - donnees   : continent les donnes a envoyer
+    #                   - client    : tuple avec adresse IP et n°port
+    #                   - sequence  : utile uniquement pour l'envoi de sequence hors bande
+    #
+    def envoi(self, donnees, client, sequence):
+        # Sequence de connexion
+        if (sequence == SEQUENCE_OUTBAND):
+            self.connexions[client] = sequence
+        elif (sequence == None):
+            self.connexions[client] = self.connexions[client] + 1
+
+        # Envoi de donnees au format JSON
+        #   cause : le type de string envoye varia a chaque fois et il est donc difficile
+        #           de facilement recuperer les donnees envoyer avec unpack.
+        #           Avec l'utilisation de JSON, on formate nos envois et facilite la reception
+        self.s.sendto(json.dumps({'sequence': self.connexions[client], 'donnees': donnees}), client)

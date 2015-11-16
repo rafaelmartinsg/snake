@@ -23,16 +23,10 @@ from snakeChannel import snakeChannel
 UDP_ADD_IP = "127.0.0.1"
 UDP_NUM_PORT = 7777
 BUFFER_SIZE = 4096
+SEQUENCE_OUTBAND = 0xffffff
 
 # Declaration de variables globales
-#a mettre dans snakechannel
-#s = socket.socket()  # creation de l'objet socket
 
-#s.connect((client, port))
-#print(s.recv(1024))
-#s.close  # fermeture du socket
-
-#class client
 class Client(snakeChannel):
     #constructeur de la class Client
     def __init__(self):
@@ -61,7 +55,7 @@ class Client(snakeChannel):
                 if (etat == 0):
                     self.socket.connect((self.addIP, self.nPort))
                     print 'Connexion du client...'
-                    self.socket.send("GetToken " + str(A) + " Snake")
+                    self.envoi("GetToken " + str(A) + " Snake", (self.addIP, self.nPort), SEQUENCE_OUTBAND)
                     print "Client envoi : GetToken", A
                     etat += 1
                 # Si etat 1
@@ -76,7 +70,8 @@ class Client(snakeChannel):
                         if (token[2] == A):
                             B = token[1]
                             pNum = token[3]
-                            self.socket.send("Connect /challenge/" + str(B) + "/protocol/" + str(pNum))
+                            self.envoi("Connect /challenge/" + str(B) + "/protocol/" + str(pNum), (self.addIP, self.nPort), None)
+                            #self.socket.send("Connect /challenge/" + str(B) + "/protocol/" + str(pNum))
                             print "Client envoi : Connect /challenge/", B, "/protocol/", pNum
                             etat += 1
                         else:
