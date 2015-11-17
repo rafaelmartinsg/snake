@@ -30,7 +30,23 @@ class snakeChannel:
         self.connexions = {}
 
     def reception(self):
-        return self.s.recv(BUFFER_SIZE)
+        try:
+            donnees, client = self.s.recvfrom(BUFFER_SIZE)
+            donneesJSon = json.loads(donnees)
+            NumeroSequence, payload = donneesJSon['sequence'], donneesJSon['donnees']
+
+            #if (self.connexions.get(client) is None):
+            if (self.connexions[client] == None):
+                self.connexions[client] = SEQUENCE_OUTBAND
+
+            if ((NumeroSequence == SEQUENCE_OUTBAND) or
+                (self.connexions[client] < NumeroSequence)):
+                return payload, client
+        except socket.error:
+            print "Erreur de communication via le socket"
+            pass
+
+        return None, None
 
     #
     #   envoi

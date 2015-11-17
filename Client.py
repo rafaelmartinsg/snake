@@ -60,7 +60,7 @@ class Client(snakeChannel):
                     etat += 1
                 # Si etat 1
                 elif (etat == 1):
-                    controlToken = self.socket.recv(BUFFER_SIZE)
+                    controlToken  = self.reception()
                     print "Client recoit : ", controlToken
                     if (controlToken is None):
                         etat -= 1
@@ -79,7 +79,7 @@ class Client(snakeChannel):
                             print "Erreur token, retour etat initial (0)"
                 # Si etat 3
                 elif (etat == 2):
-                    controlConnexion = self.socket.recv(BUFFER_SIZE)
+                    controlConnexion = self.reception()
                     print "Client recoit : ", controlConnexion
                     if controlConnexion is None:
                         # Si connexion pas acquitee, on revient a l'etat precedent

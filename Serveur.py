@@ -52,18 +52,18 @@ class Serveur(snakeChannel):
         while(True):
             try:
                 print "En attente de clients ..."
-                donnees = self.serveur.recv()
-                self.clients[donnees] = 0
+                donnees, client = self.reception()
+                self.clients[client] = 0
                 token = donnees.split()
                 print "Serveur recoit : ", donnees
 
-                if (donnees[:7] == "GetToken"):
+                if (donnees[1] == "GetToken"):
                     # Generation de B de la meme sorte que A
                     B = random.randint(0, (1 << 32) - 1)
                     token = donnees.split()
                     A = token[1]
 
-                    self.envoi("Token " + str(B) + " " + str(A) + " " + str(PNUM), (self.addIp, self.nPort),SEQUENCE_OUTBAND)
+                    self.envoi("Token " + str(B) + " " + str(A) + " " + str(PNUM), client,SEQUENCE_OUTBAND)
                     print "Serveur envoi : Token ", B, " ", A, " ", PNUM
 
                 elif(token[1] == "Connect"):
@@ -74,7 +74,7 @@ class Serveur(snakeChannel):
                         print "Suivant...!"
                         continue
 
-                    self.envoi("Connected " + str(B), (self.addIp, self.nPort), SEQUENCE_OUTBAND)
+                    self.envoi("Connected " + str(B), client, SEQUENCE_OUTBAND)
                     print "Serveur envoi : Connected ", B
             except:
                 print "Erreur dans la gestion des messages..."
