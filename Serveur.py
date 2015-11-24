@@ -31,15 +31,13 @@ SEQUENCE_OUTBAND = 0xffffff
 class Serveur(snakeChannel):
     def __init__(self, addIp=UDP_ADD_IP, nPort=UDP_NUM_PORT):
         self.clients = {}
-        #self.outputs = [] a voir si nécessaire
         super(Serveur, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
         self.addIp = addIp
         self.nPort = nPort
         self.s.bind((self.addIp, self.nPort))
 
-
-        #self.connect()
         print 'Serveur ecoute sur le port : ', self.nPort, '...'
+
 
     #
     #   gestionMessage est la methode qui s'occupe des messages recus et ceux que le serveur doit envoyer
