@@ -24,27 +24,29 @@ BUFFER_SIZE = 4096
 SEQUENCE_OUTBAND = 0xffffff
 
 #class snakeChannel
-class snakeChannel:
+class snakeChannel(object):
     def __init__(self, hostSocket):
         self.s = hostSocket
         self.connexions = {}
 
     def reception(self):
-        try:
-            donnees, client = self.s.recvfrom(BUFFER_SIZE)
-            donneesJSon = json.loads(donnees)
-            NumeroSequence, payload = donneesJSon['sequence'], donneesJSon['donnees']
+        #try:
+        donnees, client = self.s.recvfrom(BUFFER_SIZE)
+        donneesJSon = json.loads(donnees)
+        NumeroSequence, payload = donneesJSon['sequence'], donneesJSon['donnees']
+        #self.connexions[client] = 0
 
-            #if (self.connexions.get(client) is None):
-            if (self.connexions[client] == None):
-                self.connexions[client] = SEQUENCE_OUTBAND
+        if (self.connexions.get(client) is None):
+        #if (self.connexions[client] == None):
+            self.connexions[client] = SEQUENCE_OUTBAND
 
-            if ((NumeroSequence == SEQUENCE_OUTBAND) or
-                (self.connexions[client] < NumeroSequence)):
-                return payload, client
-        except socket.error:
-            print "Erreur de communication via le socket"
-            pass
+        if ((NumeroSequence == SEQUENCE_OUTBAND) or
+            (self.connexions[client] < NumeroSequence)):
+            return payload, client
+
+        #except socket.error:
+            #print "Erreur de communication via le socket"
+            #pass
 
         return None, None
 
@@ -56,11 +58,14 @@ class snakeChannel:
     #                   - sequence  : utile uniquement pour l'envoi de sequence hors bande
     #
     def envoi(self, donnees, client, sequence):
+
         # Sequence de connexion
         if (sequence == SEQUENCE_OUTBAND):
             self.connexions[client] = sequence
         elif (sequence == None):
-            self.connexions[client] = self.connexions[client] + 1
+            print"test sequence == none"
+            self.connexions[client]= 0
+            self.connexions[client] = (self.connexions[client] + 1)
 
         # Envoi de donnees au format JSON
         #   cause : le type de string envoye varia a chaque fois et il est donc difficile

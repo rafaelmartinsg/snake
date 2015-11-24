@@ -21,7 +21,7 @@ from snakeChannel import snakeChannel
 # Constantes
 MAX_CLIENT = 10
 UDP_ADD_IP = "127.0.0.1"
-UDP_NUM_PORT = 6666
+UDP_NUM_PORT = 6667
 BUFFER_SIZE = 4096
 PNUM = 19 # meme valeur que dans enonce
 SEQUENCE_OUTBAND = 0xffffff
@@ -32,11 +32,13 @@ class Serveur(snakeChannel):
     def __init__(self, addIp=UDP_ADD_IP, nPort=UDP_NUM_PORT):
         self.clients = {}
         #self.outputs = [] a voir si nécessaire
-        self.serveur = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        super(Serveur, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
         self.addIp = addIp
         self.nPort = nPort
-        self.serveur.bind((self.addIp, self.nPort))
-        self.connect()
+        self.s.bind((self.addIp, self.nPort))
+
+
+        #self.connect()
         print 'Serveur ecoute sur le port : ', self.nPort, '...'
 
     #
@@ -50,31 +52,35 @@ class Serveur(snakeChannel):
     #
     def gestionMessages(self):
         while(True):
-            try:
-                print "En attente de clients ..."
-                donnees, client = self.reception()
-                self.clients[client] = 0
-                token = donnees.split()
-                print "Serveur recoit : ", donnees
+            #try:
+            print "En attente de clients ..."
+            donnees, client = self.reception()
+            token = donnees.split()
+            print "Serveur recoit : ", donnees
 
-                if (donnees[1] == "GetToken"):
-                    # Generation de B de la meme sorte que A
-                    B = random.randint(0, (1 << 32) - 1)
-                    token = donnees.split()
-                    A = token[1]
+            if (token[0] == "GetToken"):
+                # Generation de B de la meme sorte que A
+                A = random.randint(0, (1 << 32) - 1)
+                #token = donnees.split()
+                B = token[1]
 
-                    self.envoi("Token " + str(B) + " " + str(A) + " " + str(PNUM), client,SEQUENCE_OUTBAND)
-                    print "Serveur envoi : Token ", B, " ", A, " ", PNUM
+                self.envoi("Token " + str(A) + " " + str(B) + " " + str(PNUM), client, SEQUENCE_OUTBAND)
+                print "Serveur envoi : Token ", A, " ", B, " ", PNUM
 
-                elif(token[1] == "Connect"):
-                    separateur = token[1].split('/')
+            elif(token[0] == "Connect"):
+                separateur = token[1].split('/')
+                print "separateur == ", separateur
 
-                    # Control de la valeur de B
-                    if ((len(separateur) < 3) or (int(B) != int(separateur[2]))):
-                        print "Suivant...!"
-                        continue
+                # Control de la valeur de B
+                if ((len(separateur) < 3) or (int(A) != int(separateur[2]))):
+                    print "Suivant...!"
+                    continue
 
-                    self.envoi("Connected " + str(B), client, SEQUENCE_OUTBAND)
-                    print "Serveur envoi : Connected ", B
-            except:
-                print "Erreur dans la gestion des messages..."
+                self.envoi("Connected " + str(A), client, SEQUENCE_OUTBAND)
+                print "Serveur envoi : Connected ", A
+        #except:
+            #print "Erreur dans la gestion des messages..."
+
+if __name__=="__main__":
+    serv = Serveur()
+    serv.gestionMessages()

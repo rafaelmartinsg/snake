@@ -21,7 +21,7 @@ from snakeChannel import snakeChannel
 
 # Constantes
 UDP_ADD_IP = "127.0.0.1"
-UDP_NUM_PORT = 7777
+UDP_NUM_PORT = 6667
 BUFFER_SIZE = 4096
 SEQUENCE_OUTBAND = 0xffffff
 
@@ -30,11 +30,11 @@ SEQUENCE_OUTBAND = 0xffffff
 class Client(snakeChannel):
     #constructeur de la class Client
     def __init__(self):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        super(Client, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
         self.addIP = UDP_ADD_IP
         self.nPort = UDP_NUM_PORT
-        self.socket.settimeout(10) # definit le timeout
-        self.socket.connect((self.addIP,self.nPort))
+        #self.socket.settimeout(10) # definit le timeout
+        #self.socket.connect((self.addIP,self.nPort))
 
     #
     #   connexion est la methode qui permettra au client de se connecter au serveur
@@ -50,45 +50,51 @@ class Client(snakeChannel):
         A = random.randint(0, (1 << 32) - 1)
         B = 0
         while (etat < 3):
-            try:
-                # Si etat 0
-                if (etat == 0):
-                    self.socket.connect((self.addIP, self.nPort))
-                    print 'Connexion du client...'
-                    self.envoi("GetToken " + str(A) + " Snake", (self.addIP, self.nPort), None)
-                    print "Client envoi : GetToken", A
-                    etat += 1
-                # Si etat 1
-                elif (etat == 1):
-                    controlToken  = self.reception()
-                    print "Client recoit : ", controlToken
-                    if (controlToken is None):
-                        etat -= 1
-                    else:
-                        token = controlToken.split()
-                        # Controle du A recu
-                        if (token[2] == A):
-                            B = token[1]
-                            pNum = token[3]
-                            self.envoi("Connect /challenge/" + str(B) + "/protocol/" + str(pNum), (self.addIP, self.nPort), None)
-                            #self.socket.send("Connect /challenge/" + str(B) + "/protocol/" + str(pNum))
-                            print "Client envoi : Connect /challenge/", B, "/protocol/", pNum
-                            etat += 1
-                        else:
-                            etat = 0
-                            print "Erreur token, retour etat initial (0)"
-                # Si etat 3
-                elif (etat == 2):
-                    controlConnexion = self.reception()
-                    print "Client recoit : ", controlConnexion
-                    if controlConnexion is None:
-                        # Si connexion pas acquitee, on revient a l'etat precedent
-                        etat -= 1
-                    else:
-                        token = controlConnexion.split()
-                        if B == token[1]:
-                            etat += 1
+            #try:
+            # Si etat 0
+            if (etat == 0):
+                self.s.connect((self.addIP, self.nPort))
+
+                print 'Connexion du client...'
+                self.envoi("GetToken " + str(A) + " Snake", (self.addIP, self.nPort), SEQUENCE_OUTBAND)
+                print "Client envoi : GetToken", A
+                etat += 1
+            # Si etat 1
+            elif (etat == 1):
+                controlToken, client  = self.reception()
+                print "Client recoit : ", controlToken
+                if (controlToken is None):
+                    etat -= 1
                 else:
-                    print "Une erreur est survenue pendant la connexion du client."
-            except:
-                print("problème au niveau du client")
+                    token = controlToken.split()
+                    # Controle du A recu
+                    if (token[2] == str(A)):
+                        B = token[1]
+                        pNum = token[3]
+                        self.envoi('Connect /challenge/' + str(B) + '/protocol/' + str(pNum), (self.addIP, self.nPort), SEQUENCE_OUTBAND)
+                        print 'Client envoi : Connect /challenge/', B, '/protocol/', pNum
+                        etat += 1
+                    else:
+                        etat = 0
+                        print "Erreur token, retour etat initial (0)"
+            # Si etat 3
+            elif (etat == 2):
+                controlConnexion, client = self.reception()
+                print "Client recoit : ", controlConnexion
+                if controlConnexion is None:
+                    # Si connexion pas acquitee, on revient a l'etat precedent
+                    etat -= 1
+                else:
+                    token = controlConnexion.split()
+                    print B
+                    if B == token[1]:
+                        etat += 1
+            else:
+                print "Une erreur est survenue pendant la connexion du client."
+            #except:
+                #print("problème au niveau du client")
+        print"fin de connexion..."
+
+if __name__=="__main__":
+    c = Client()
+    c.connexion()
