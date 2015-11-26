@@ -15,6 +15,7 @@
 import socket  # Import socket module
 import random
 import json
+from select import *
 
 # Constantes
 MAX_CLIENT = 10
@@ -85,10 +86,13 @@ class snakeChannel(object):
         clients = {}
 
         print 'Serveur ecoute sur le port : ', self.nPort, '...'
+        print "En attente de clients ..."
         while(True):
             #try:
-            print "En attente de clients ..."
+
             donnees, client = self.reception(s)
+            if donnees == None:
+                continue
             token = donnees.split()
             print "Serveur recoit : ", donnees
 
@@ -112,24 +116,28 @@ class snakeChannel(object):
 
                 self.envoi(s, "Connected " + str(A), client, SEQUENCE_OUTBAND)
                 print "Serveur envoi : Connected ", A
+                print "En attente de clients ..."
         #except:
             #print "Erreur dans la gestion des messages..."
 
 
     def reception(self, s):
         #try:
-        donnees, client = s.recvfrom(BUFFER_SIZE)
-        donneesJSon = json.loads(donnees)
-        NumeroSequence, payload = donneesJSon['sequence'], donneesJSon['donnees']
-        #self.connexions[client] = 0
+        inputfd,outputfd, exeptfd = select([s], [], [],1)
 
-        if (self.connexions.get(client) is None):
-        #if (self.connexions[client] == None):
-            self.connexions[client] = SEQUENCE_OUTBAND
+        for i in inputfd:
+            donnees, client = s.recvfrom(BUFFER_SIZE)
+            donneesJSon = json.loads(donnees)
+            NumeroSequence, payload = donneesJSon['sequence'], donneesJSon['donnees']
+            #self.connexions[client] = 0
 
-        if ((NumeroSequence == SEQUENCE_OUTBAND) or
-            (self.connexions[client] < NumeroSequence)):
-            return payload, client
+            if (self.connexions.get(client) is None):
+            #if (self.connexions[client] == None):
+                self.connexions[client] = SEQUENCE_OUTBAND
+
+            if ((NumeroSequence == SEQUENCE_OUTBAND) or
+                (self.connexions[client] < NumeroSequence)):
+                return payload, client
 
         #except socket.error:
             #print "Erreur de communication via le socket"
