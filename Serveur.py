@@ -30,12 +30,13 @@ SEQUENCE_OUTBAND = 0xffffff
 
 class Serveur(snakeChannel):
     def __init__(self, addIp=UDP_ADD_IP, nPort=UDP_NUM_PORT):
+        super(Serveur, self).__init__()
         self.clients = {}
-        super(Serveur, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
+        self.sServeur = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.addIp = addIp
         self.nPort = nPort
-        self.s.bind((self.addIp, self.nPort))
-
+        self.sServeur.bind((self.addIp, self.nPort))
+        #super(Serveur, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
         print 'Serveur ecoute sur le port : ', self.nPort, '...'
 
 
@@ -50,34 +51,8 @@ class Serveur(snakeChannel):
     #
     def gestionMessages(self):
         while(True):
-            #try:
-            print "En attente de clients ..."
-            donnees, client = self.reception()
-            token = donnees.split()
-            print "Serveur recoit : ", donnees
+            self.serveurConnexion(self.sServeur, (self.addIp, self.nPort))
 
-            if (token[0] == "GetToken"):
-                # Generation de B de la meme sorte que A
-                A = random.randint(0, (1 << 32) - 1)
-                #token = donnees.split()
-                B = token[1]
-
-                self.envoi("Token " + str(A) + " " + str(B) + " " + str(PNUM), client, SEQUENCE_OUTBAND)
-                print "Serveur envoi : Token ", A, " ", B, " ", PNUM
-
-            elif(token[0] == "Connect"):
-                separateur = token[1].split('/')
-                print "separateur == ", separateur
-
-                # Control de la valeur de B
-                if ((len(separateur) < 3) or (int(A) != int(separateur[2]))):
-                    print "Suivant...!"
-                    continue
-
-                self.envoi("Connected " + str(A), client, SEQUENCE_OUTBAND)
-                print "Serveur envoi : Connected ", A
-        #except:
-            #print "Erreur dans la gestion des messages..."
 
 if __name__=="__main__":
     serv = Serveur()

@@ -26,12 +26,13 @@ SEQUENCE_OUTBAND = 0xffffff
 
 #class snakeChannel
 class snakeChannel(object):
-    def __init__(self, hostSocket):
-        self.s = hostSocket
+    def __init__(self):
+        #self.s = hostSocket
         self.connexions = {}
+        self.host = (UDP_ADD_IP, UDP_NUM_PORT)
 
 
-    def clientConnexion(self, udpAddr, numPort):
+    def clientConnexion(self,s):
         etat = 0
         A = random.randint(0, (1 << 32) - 1)
         B = 0
@@ -39,15 +40,12 @@ class snakeChannel(object):
             #try:
             # Si etat 0
             if (etat == 0):
-                self.s.connect((udpAddr, numPort))
-
-                print 'Connexion du client...'
-                self.envoi("GetToken " + str(A) + " Snake", (self.addIP, self.nPort), SEQUENCE_OUTBAND)
+                self.envoi(s, "GetToken " + str(A) + " Snake", (UDP_ADD_IP, UDP_NUM_PORT), SEQUENCE_OUTBAND)
                 print "Client envoi : GetToken", A
                 etat += 1
             # Si etat 1
             elif (etat == 1):
-                controlToken, client  = self.reception()
+                controlToken, client  = self.reception(s)
                 print "Client recoit : ", controlToken
                 if (controlToken is None):
                     etat -= 1
@@ -57,7 +55,7 @@ class snakeChannel(object):
                     if (token[2] == str(A)):
                         B = token[1]
                         pNum = token[3]
-                        self.envoi('Connect /challenge/' + str(B) + '/protocol/' + str(pNum), (self.addIP, self.nPort), SEQUENCE_OUTBAND)
+                        self.envoi(s, 'Connect /challenge/' + str(B) + '/protocol/' + str(pNum), self.host, SEQUENCE_OUTBAND)
                         print 'Client envoi : Connect /challenge/', B, '/protocol/', pNum
                         etat += 1
                     else:
@@ -65,7 +63,7 @@ class snakeChannel(object):
                         print "Erreur token, retour etat initial (0)"
             # Si etat 3
             elif (etat == 2):
-                controlConnexion, client = self.reception()
+                controlConnexion, client = self.reception(s)
                 print "Client recoit : ", controlConnexion
                 if controlConnexion is None:
                     # Si connexion pas acquitee, on revient a l'etat precedent
@@ -75,22 +73,22 @@ class snakeChannel(object):
                     print B
                     if B == token[1]:
                         etat += 1
+                        return True
             else:
                 print "Une erreur est survenue pendant la connexion du client."
+                return False
             #except:
                 #print("problème au niveau du client")
-        print"fin de connexion..."
 
-    def serveurConnexion(self, udpAddr=UDP_ADD_IP, numPort=UDP_NUM_PORT):
+
+    def serveurConnexion(self, s, serveur):
         clients = {}
-        super(Serveur, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
-        self.s.bind((udpAddr, numPort))
 
         print 'Serveur ecoute sur le port : ', self.nPort, '...'
         while(True):
             #try:
             print "En attente de clients ..."
-            donnees, client = self.reception()
+            donnees, client = self.reception(s)
             token = donnees.split()
             print "Serveur recoit : ", donnees
 
@@ -100,7 +98,7 @@ class snakeChannel(object):
                 #token = donnees.split()
                 B = token[1]
 
-                self.envoi("Token " + str(A) + " " + str(B) + " " + str(PNUM), client, SEQUENCE_OUTBAND)
+                self.envoi(s, "Token " + str(A) + " " + str(B) + " " + str(PNUM), client, SEQUENCE_OUTBAND)
                 print "Serveur envoi : Token ", A, " ", B, " ", PNUM
 
             elif(token[0] == "Connect"):
@@ -112,15 +110,15 @@ class snakeChannel(object):
                     print "Suivant...!"
                     continue
 
-                self.envoi("Connected " + str(A), client, SEQUENCE_OUTBAND)
+                self.envoi(s, "Connected " + str(A), client, SEQUENCE_OUTBAND)
                 print "Serveur envoi : Connected ", A
         #except:
             #print "Erreur dans la gestion des messages..."
 
 
-    def reception(self):
+    def reception(self, s):
         #try:
-        donnees, client = self.s.recvfrom(BUFFER_SIZE)
+        donnees, client = s.recvfrom(BUFFER_SIZE)
         donneesJSon = json.loads(donnees)
         NumeroSequence, payload = donneesJSon['sequence'], donneesJSon['donnees']
         #self.connexions[client] = 0
@@ -146,18 +144,18 @@ class snakeChannel(object):
     #                   - client    : tuple avec adresse IP et n°port
     #                   - sequence  : utile uniquement pour l'envoi de sequence hors bande
     #
-    def envoi(self, donnees, client, sequence):
+    def envoi(self, s, donnees, host, sequence):
 
         # Sequence de connexion
         if (sequence == SEQUENCE_OUTBAND):
-            self.connexions[client] = sequence
+            self.connexions[host] = sequence
         elif (sequence == None):
             print"test sequence == none"
-            self.connexions[client]= 0
-            self.connexions[client] = (self.connexions[client] + 1)
+            self.connexions[host]= 0
+            self.connexions[host] = (self.connexions[host] + 1)
 
         # Envoi de donnees au format JSON
         #   cause : le type de string envoye varia a chaque fois et il est donc difficile
         #           de facilement recuperer les donnees envoyer avec unpack.
         #           Avec l'utilisation de JSON, on formate nos envois et facilite la reception
-        self.s.sendto(json.dumps({'sequence': self.connexions[client], 'donnees': donnees}), client)
+        s.sendto(json.dumps({'sequence': self.connexions[host], 'donnees': donnees}), host)
