@@ -5,7 +5,7 @@
 #   Auteurs         :   Gerber Cedric
 #                       Martins Gomes Rafael
 #   Date de debut   :   28 septembre 2015
-#   Date de fin     :   XX janvier 2016
+#   Date de fin     :   04 janvier 2016
 #   Etablissement   :   hepia
 #   Filiere         :   3eme ITI
 #   Cours           :   Reseau I
@@ -18,6 +18,7 @@ import socket  # Import socket module
 import random
 
 from snakeChannel import snakeChannel
+from snakePost import snakePost
 
 # Constantes
 UDP_ADD_IP = "127.0.0.1"
@@ -50,19 +51,21 @@ class Client(snakeChannel):
     #
     def connexion(self):
         self.sClient.connect((self.addIP, self.nPort))
-        etatConnexion = False
         print 'Connexion du client...'
-        # Tant que la connexion n'est pas etablie
+        etatConnexion = False
         while not etatConnexion:
             etatConnexion = self.clientConnexion(self.sClient)
-        print"Connexion etablie."
-
-        #Envoi des donnees
+        print 'Connexion etablie !'
 
 
-
+    def partie(self):
+        #A VERIFIER...
+        snakePost(snakeChannel)
+        snakePost.envoiNonSecure()
+        pass
 
 
 if __name__=="__main__":
     c = Client()
     c.connexion()
+    c.partie()

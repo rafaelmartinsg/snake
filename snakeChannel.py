@@ -5,7 +5,7 @@
 #   Auteurs         :   Gerber Cedric
 #                       Martins Gomes Rafael
 #   Date de debut   :   28 septembre 2015
-#   Date de fin     :   XX janvier 2016
+#   Date de fin     :   04 janvier 2016
 #   Etablissement   :   hepia
 #   Filiere         :   3eme ITI
 #   Cours           :   Reseau I
@@ -129,10 +129,8 @@ class snakeChannel(object):
             donnees, client = s.recvfrom(BUFFER_SIZE)
             donneesJSon = json.loads(donnees)
             NumeroSequence, payload = donneesJSon['sequence'], donneesJSon['donnees']
-            #self.connexions[client] = 0
 
             if (self.connexions.get(client) is None):
-            #if (self.connexions[client] == None):
                 self.connexions[client] = SEQUENCE_OUTBAND
 
             if ((NumeroSequence == SEQUENCE_OUTBAND) or

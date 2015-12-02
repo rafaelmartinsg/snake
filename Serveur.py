@@ -5,7 +5,7 @@
 #   Auteurs         :   Gerber Cedric
 #                       Martins Gomes Rafael
 #   Date de debut   :   28 septembre 2015
-#   Date de fin     :   XX janvier 2016
+#   Date de fin     :   04 janvier 2016
 #   Etablissement   :   hepia
 #   Filiere         :   3eme ITI
 #   Cours           :   Reseau I
@@ -17,6 +17,7 @@ import socket
 import random
 
 from snakeChannel import snakeChannel
+from snakePost import snakePost
 
 # Constantes
 MAX_CLIENT = 10
