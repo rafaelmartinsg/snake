@@ -60,8 +60,10 @@ class Client(snakeChannel):
 
     def partie(self):
         #A VERIFIER...
-        snakePost(snakeChannel)
-        snakePost.envoiNonSecure()
+
+        #snakePost(snakeChannel)
+        sp = snakePost()
+        sp.envoiNonSecure(self.sClient, "blablabla", (self.addIP, self.nPort))
         pass
 
 

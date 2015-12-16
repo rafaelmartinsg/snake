@@ -55,6 +55,8 @@ class Serveur(snakeChannel):
             self.serveurConnexion(self.sServeur, (self.addIp, self.nPort))
 
 
+
+
 if __name__=="__main__":
     serv = Serveur()
     serv.gestionMessages()

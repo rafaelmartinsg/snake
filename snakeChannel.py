@@ -116,7 +116,9 @@ class snakeChannel(object):
 
                 self.envoi(s, "Connected " + str(A), client, SEQUENCE_OUTBAND)
                 print "Serveur envoi : Connected ", A
-                print "En attente de clients ..."
+                #donnees, client = self.reception(s)
+                #print "donnee : ",donnees
+            print "En attente de clients ..."
         #except:
             #print "Erreur dans la gestion des messages..."
 
@@ -133,14 +135,17 @@ class snakeChannel(object):
             if (self.connexions.get(client) is None):
                 self.connexions[client] = SEQUENCE_OUTBAND
 
-            if ((NumeroSequence == SEQUENCE_OUTBAND) or
-                (self.connexions[client] < NumeroSequence)):
+            if ((NumeroSequence == SEQUENCE_OUTBAND) or (self.connexions[client] < NumeroSequence)):
+                return payload, client
+            elif NumeroSequence == 0:
+                return payload, client
+            elif (NumeroSequence != SEQUENCE_OUTBAND) and (NumeroSequence > 0):
                 return payload, client
 
         #except socket.error:
             #print "Erreur de communication via le socket"
             #pass
-
+        #print"test2"
         return None, None
 
     #
@@ -153,7 +158,7 @@ class snakeChannel(object):
     def envoi(self, s, donnees, host, sequence):
 
         # Sequence de connexion
-        if (sequence == SEQUENCE_OUTBAND):
+        if (sequence == SEQUENCE_OUTBAND or sequence == 0):
             self.connexions[host] = sequence
         elif (sequence == None):
             print"test sequence == none"

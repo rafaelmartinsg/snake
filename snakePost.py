@@ -16,27 +16,34 @@ import socket  # Import socket module
 import random
 import json
 import pygame
+from pygame.locals import *
 
 from select import *
-
 from snakeChannel import snakeChannel
 
+#Constantes
+LIST_SIZE_MAX = 64
+MESSAGE_SECURE =  USEREVENT + 1
 class snakePost(snakeChannel):
     def __init__(self):
-        self.messagesSecure = {}
-        self.pygame.init()
-        self.pygame.time.set_timer("MESSAGE_SECURE", 30)
+        super(snakePost, self).__init__() #Appele le constructeur de la classe qu'on hérite
+        self.messagesSecure = {} # dictionnaire de host,port qui contient message secure
+        pygame.init()
+        pygame.time.set_timer(MESSAGE_SECURE, 30)
+        self.numSeq = 0
 
-    def envoiNonSecure(self, s, donnees, host, sequence):
-        snakeChannel.envoi(s, donnees, host, sequence)
+    def envoiNonSecure(self, s, donnees, host):
+        #snakeChannel.envoi(s, donnees, host, sequence)
+        self.envoi(s, donnees, host, 0)
 
-    def envoiSecure(self, s, donnees, host, sequence):
+    def envoiSecure(self, s, donnees, host):
+        self.numSeq = ((self.numSeq+1)%2) + 1
         if self.messagesSecure[host] is None:
-            self.messagesSecure[host] = []
-            self.messagesSecure[host].append((donnees, sequence))
-        else:
+            self.messagesSecure[host] = [LIST_SIZE_MAX]
+            self.messagesSecure[host].append((donnees, self.numSeq))
+        elif len(self.messagesSecure) <= LIST_SIZE_MAX:
             #Stock dans une liste de host les messages secures a envoyer
-            self.messagesSecure[host].append((donnees, sequence))
+            self.messagesSecure[host].append((donnees, self.numSeq))
 
     def Ack(self, host, donnees, sequence):
         if self.messagesSecure[host].get(0) == (donnees, sequence):
@@ -46,16 +53,11 @@ class snakePost(snakeChannel):
         continuer = True
         while(continuer):
             for event in pygame.event.get():
-                if event.type == "MESSAGE_SECURE":
+                if event.type == MESSAGE_SECURE:
+                    #on check dans le dico client si un message secure est a envoyer
                     for key in self.messagesSecure:
                         donnees,seq = self.messagesSecure[key].get(0)
-                        snakeChannel.envoi(self, s, donnees, key, seq)
+                        self.envoi(s, donnees, key, seq)
                     break
-                    #on check dans le dico client si un message secure est a envoyer
-
-                    pass
-                #Si pas d'evenement
-                else:
-                    #On reste en attente de nouveaux messages et on les traites
-                    snakeChannel.reception(s)
-                    pass
+            #Si pas d'evenement, on reste en attente de nouveaux messagess
+            snakeChannel.reception(s)
