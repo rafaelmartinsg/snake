@@ -26,8 +26,10 @@ LIST_SIZE_MAX = 64
 MESSAGE_SECURE =  USEREVENT + 1
 class snakePost(snakeChannel):
     def __init__(self):
-        super(snakePost, self).__init__() #Appele le constructeur de la classe qu'on hérite
-        self.messagesSecure = {} # dictionnaire de host,port qui contient message secure
+        #Appele le constructeur de la classe qu'on hérite
+        super(snakePost, self).__init__()
+        # dictionnaire de host,port qui contient message secure
+        self.messagesSecure = {}
         pygame.init()
         pygame.time.set_timer(MESSAGE_SECURE, 30)
         self.numSeq = 0
@@ -37,7 +39,7 @@ class snakePost(snakeChannel):
         self.envoi(s, donnees, host, 0)
 
     def envoiSecure(self, s, donnees, host):
-        self.numSeq = ((self.numSeq+1)%2) + 1
+        self.numSeq = ((self.numSeq + 1) % 2) + 1
         if self.messagesSecure[host] is None:
             self.messagesSecure[host] = [LIST_SIZE_MAX]
             self.messagesSecure[host].append((donnees, self.numSeq))
@@ -45,17 +47,16 @@ class snakePost(snakeChannel):
             #Stock dans une liste de host les messages secures a envoyer
             self.messagesSecure[host].append((donnees, self.numSeq))
 
-    def ackSecureMessage(self, host, donnees, sequence):
-        if self.messagesSecure[host].get(0) == (donnees, sequence):
-            self.messagesSecure[host].pop(0)
+    #def ackSecureMessage(self, host, sequence, donnees):
+    #    if self.messagesSecure[host].get(0) == (donnees, sequence):
+    #        self.messagesSecure[host].pop(0)
 
-
-    def receptionPost(self,host,seq,ack,payload):
-        if ack == 0:
-            pass
-        elif ack != 0:
-            if ack == self.messagesSecure[host].get(0):
+    def receptionPost(self, host, seq, ack, payload):
+        if ack != 0:
+            # Si message secure recu et que ack+payload identique a dans liste
+            if (ack, payload) == self.messagesSecure[host].get(0):
                 self.messagesSecure[host].pop(0)
+            # Message bidon, donc on ne fait rien
             else:
                 return None
         return payload
@@ -68,7 +69,8 @@ class snakePost(snakeChannel):
                     #on check dans le dico client si un message secure est a envoyer
                     for key in self.messagesSecure:
                         donnees,seq = self.messagesSecure[key].get(0)
-                        self.envoi(s, donnees, key, seq)
+                        self.envoiNonSecure(s, donnees, key)
                     break
             #Si pas d'evenement, on reste en attente de nouveaux messagess
-            snakeChannel.reception(s)
+            self.receptionPost(key, seq, seq, donnees)
+            #snakeChannel.reception(s)
