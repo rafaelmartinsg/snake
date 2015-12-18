@@ -45,9 +45,20 @@ class snakePost(snakeChannel):
             #Stock dans une liste de host les messages secures a envoyer
             self.messagesSecure[host].append((donnees, self.numSeq))
 
-    def Ack(self, host, donnees, sequence):
+    def ackSecureMessage(self, host, donnees, sequence):
         if self.messagesSecure[host].get(0) == (donnees, sequence):
             self.messagesSecure[host].pop(0)
+
+
+    def receptionPost(self,host,seq,ack,payload):
+        if ack == 0:
+            pass
+        elif ack != 0:
+            if ack == self.messagesSecure[host].get(0):
+                self.messagesSecure[host].pop(0)
+            else:
+                return None
+        return payload
 
     def gestionEvennement(self, s):
         continuer = True
