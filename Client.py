@@ -35,6 +35,7 @@ class Client(snakeChannel):
         self.sClient = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.addIP = UDP_ADD_IP
         self.nPort = UDP_NUM_PORT
+        self.listBody = []
 
         #super(Client, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
         #self.socket.settimeout(10) # definit le timeout
@@ -65,6 +66,19 @@ class Client(snakeChannel):
         sp = snakePost()
         sp.envoiNonSecure(self.sClient, "blablabla", (self.addIP, self.nPort))
         pass
+
+    #Methode qui envoie la liste qui contient les coordonnées du corp d'un serpent
+    # envoie non securisé. listBody => contient les positions des différentes parties du corps
+    def msgBody_p(self):
+        #formatage des données en JSON
+        # envoie non sécurisé
+        pass
+    #methode qui envoie un message qui dit au serveur si on est ready ou pas
+    def msgReady(nomJoueur):
+        #formatage des données en JSON
+        #envoie fiable
+        pass
+
 
 
 if __name__=="__main__":

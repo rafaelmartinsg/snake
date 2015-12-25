@@ -33,6 +33,9 @@ class Serveur(snakeChannel):
     def __init__(self, addIp=UDP_ADD_IP, nPort=UDP_NUM_PORT):
         super(Serveur, self).__init__()
         self.clients = {}
+        self.listFood = []
+        self.listPlayersInfo = []
+        self.snakesDico = {}
         self.sServeur = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.addIp = addIp
         self.nPort = nPort
@@ -54,7 +57,37 @@ class Serveur(snakeChannel):
         while(True):
             self.serveurConnexion(self.sServeur, (self.addIp, self.nPort))
 
+    #Methode pour les messages food, listFood => liste avec toute les coordonnées des pommes
+    def msgFood(self):
+        #formatage des données en JSON
+        #Envoie securisé a tout les clients la liste des pommes
+        pass
 
+    #envoie la liste des positions du corps de tout les snakes dans la partie, préfixées par l'identifiant
+    #du joueur. snakesDico => dicitonnaire nom du joueur, position
+    def msgSnakes(self):
+        #formatage des données en JSON
+        #envoie non fiable
+        pass
+
+    #msg contenant toute les infos des joueurs: nom du joueur, sa couleur, son score, ready ou pas
+    #listPlayersInfo => liste contenant toute les infos
+    def msgPlayers_info(self):
+        #formatage JSON
+        #envoie fiable
+        pass
+
+    #Contient le nom du joueur qui a perdu et qui doit recommencer depuis le debut
+    def msgGame_over(nomJoueur):
+        #formatage JSON
+        #envoie fiable
+        pass
+
+    #previens un joueur qu'il est rentrer dans une pomme
+    def msgGrow(nomJoueur):
+        #formatage JSON
+        #envoie fiable
+        pass
 
 
 if __name__=="__main__":
