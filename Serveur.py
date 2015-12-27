@@ -15,6 +15,7 @@
 
 import socket
 import random
+import json
 
 from snakeChannel import snakeChannel
 from snakePost import snakePost
@@ -60,8 +61,14 @@ class Serveur(snakeChannel):
     #Methode pour les messages food, listFood => liste avec toute les coordonnées des pommes
     def msgFood(self):
         #formatage des données en JSON
+        if(self.listFood[0] == None):
+            print "liste des pommes vides"
+        else:
+            send = "{'foods': "
+            send += json.dumps(self.listFood) + "}"
         #Envoie securisé a tout les clients la liste des pommes
-        pass
+        for i in self.clients:
+         snakePost.envoiSecure(self,self.sServeur,send,)
 
     #envoie la liste des positions du corps de tout les snakes dans la partie, préfixées par l'identifiant
     #du joueur. snakesDico => dicitonnaire nom du joueur, position
