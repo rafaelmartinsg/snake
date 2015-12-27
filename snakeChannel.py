@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!\usr\bin\python2.7
 # -*- coding: utf-8 -*-
 
 #  ##############################################################################
@@ -15,7 +15,9 @@
 import socket  # Import socket module
 import random
 import json
+import pygame
 from select import *
+
 
 # Constantes
 MAX_CLIENT = 10
@@ -37,6 +39,7 @@ class snakeChannel(object):
         etat = 0
         A = random.randint(0, (1 << 32) - 1)
         B = 0
+        #couleur = pygame.color.THECOLORS
         while (etat < 3):
             #try:
             # Si etat 0
@@ -56,8 +59,10 @@ class snakeChannel(object):
                     if (token[2] == str(A)):
                         B = token[1]
                         pNum = token[3]
-                        self.envoi(s, 'Connect /challenge/' + str(B) + '/protocol/' + str(pNum), self.host, SEQUENCE_OUTBAND)
-                        print 'Client envoi : Connect /challenge/', B, '/protocol/', pNum
+                        self.envoi(s, "Connect \\challenge\\" + str(B) + "\\protocol\\" + str(pNum) +
+                                   "\\color\\red\\nickname\\rafael", self.host, SEQUENCE_OUTBAND)
+                        print "Client envoi : Connect \challenge\\", B, \
+                            "\\protocol\\", pNum, "\\color\\red\\nickname\\rafael"
                         etat += 1
                     else:
                         etat = 0
@@ -106,7 +111,7 @@ class snakeChannel(object):
                 print "Serveur envoi : Token ", A, " ", B, " ", PNUM
 
             elif(token[0] == "Connect"):
-                separateur = token[1].split('/')
+                separateur = token[1].split("\\")
                 print "separateur == ", separateur
 
                 # Control de la valeur de B
