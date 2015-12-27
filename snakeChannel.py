@@ -21,11 +21,11 @@ from select import *
 
 # Constantes
 MAX_CLIENT = 10
-UDP_ADD_IP = "127.0.0.1"
-UDP_NUM_PORT = 6667
+UDP_ADD_IP = "129.194.186.177"
+UDP_NUM_PORT = 7777
 BUFFER_SIZE = 4096
 PNUM = 19 # meme valeur que dans enonce
-SEQUENCE_OUTBAND = 0xffffff
+SEQUENCE_OUTBAND = 0xffffffff
 
 #class snakeChannel
 class snakeChannel(object):
@@ -175,3 +175,4 @@ class snakeChannel(object):
         #           de facilement recuperer les donnees envoyer avec unpack.
         #           Avec l'utilisation de JSON, on formate nos envois et facilite la reception
         s.sendto(json.dumps({'sequence': self.connexions[host], 'donnees': donnees}), host)
+        #s.sendto("GetToken 123456423434", host)

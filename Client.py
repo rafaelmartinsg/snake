@@ -28,7 +28,7 @@ from snakePost import snakePost
 UDP_ADD_IP = "127.0.0.1"
 UDP_NUM_PORT = 6667
 BUFFER_SIZE = 4096
-SEQUENCE_OUTBAND = 0xffffff
+SEQUENCE_OUTBAND = 0xffffffff
 
 # Declaration de variables globales
 
@@ -211,6 +211,6 @@ class Client(snakeChannel):
 
 
 if __name__=="__main__":
-    c = Client("127.0.0.1", 6667, "green", "Rafael").run()
+    c = Client("192.168.1.118",7777, "green", "Rafael").run()
     #c.connexion()
     #c.partie()
