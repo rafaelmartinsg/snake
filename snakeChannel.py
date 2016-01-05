@@ -52,7 +52,7 @@ class snakeChannel(object):
                 etat += 1
             # Si etat 1
             elif etat == 1:
-                controlToken, client = self.receptionSnakeChann
+                controlToken, client = self.receptionSnakeChann()
                 print "Client recoit : ", controlToken
                 if controlToken is None:
                     etat -= 1
@@ -73,7 +73,7 @@ class snakeChannel(object):
                         print "Erreur token, retour etat initial (0)"
             # Si etat 3
             elif etat == 2:
-                controlConnexion, client = self.receptionSnakeChann
+                controlConnexion, client = self.receptionSnakeChann()
                 print "Client recoit : ", controlConnexion
                 if controlConnexion is None:
                     # Si connexion pas acquitee, on revient a l'etat precedent
@@ -149,7 +149,7 @@ class snakeChannel(object):
         print 'Serveur ecoute sur le port : ', self.nPort, '...'
         print "En attente de clients ..."
         try:
-            donnees, client = self.receptionSnakeChann
+            donnees, client = self.receptionSnakeChann()
 
             if donnees is None:
                 return None, None

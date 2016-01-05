@@ -14,21 +14,14 @@
 # ##############################################################################
 import socket  # Import socket module
 
-from constants import Constants
+from constants import *
 from object_snake import *
 from object_foods import *
 from scores import *
 from preferences import Preferences
 from banner import *
 from timer import *
-from snakeChannel import snakeChannel
 from snakePost import snakePost
-
-# Constantes
-UDP_ADD_IP = "127.0.0.1"
-UDP_NUM_PORT = 6667
-BUFFER_SIZE = 4096
-SEQUENCE_OUTBAND = 0xffffffff
 
 # Declaration de variables globales
 
