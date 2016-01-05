@@ -33,7 +33,7 @@ class snakePost(snakeChannel):
         self.messagesSecures = {} # Contient tous les messages secures a envoyer pour chaque client
         self.messagesNormaux = {} # Contient tous les messages normaux a envoyer pour chaque client
         self.last_ack = {}  # Contient la valeur du dernier ack recu par les clients
-        self.seq = {}  # Contient le dernier numero de sequence du client
+        self.last_seq = {}  # Contient le dernier numero de sequence du client
         self.ackRecus = {} # Permet d'avoir un ensemble des ack recus afin de pouvoir traites les messages secures
         self.attenteSecureReseau = {} # Permet de savoir si un client a un message secure sur le reseau
 
@@ -87,7 +87,7 @@ class snakePost(snakeChannel):
             return None, None
     
     def envoiSnakePost(self, donnees, canal, secure=False):
-        self.inistialisation(canal)
+        self.initialisation(canal)
         if not secure:
             self.messagesNormaux[canal].append((struct.pack('>2H', 0, 0) + donnees, canal))
             # print "[send] Not secure : donnees = ", donnees, " - to : ", canal
