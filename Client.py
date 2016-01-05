@@ -23,12 +23,10 @@ from banner import *
 from timer import *
 from snakePost import snakePost
 
-# Declaration de variables globales
 
 class Client(snakePost):
-    #constructeur de la class Client
-    def __init__(self, ip=UDP_ADD_IP, port=UDP_NUM_PORT, couleur="blue", nickname="invite"):
-        super(Client, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM), ip, port, couleur, nickname)
+    def __init__(self, ip=UDP_ADD_IP, port=UDP_NUM_PORT, couleur="blue", nickname="invite", udp=False):
+        super(Client, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM), ip, port, couleur, nickname, udp)
         self.addIP = ip
         self.nPort = int(port)
 
@@ -50,11 +48,11 @@ class Client(snakePost):
         self.score_width = self.unit*15
 
         if self.preferences.fullscreen:
-            self.screen = pygame.display.set_mode((Constants.RESOLUTION[0]+self.score_width,\
-                                               Constants.RESOLUTION[1]), pygame.FULLSCREEN)
+            self.screen = pygame.display.set_mode((Constants.RESOLUTION[0]+self.score_width,
+                                                   Constants.RESOLUTION[1]), pygame.FULLSCREEN)
         else:
-            self.screen = pygame.display.set_mode((Constants.RESOLUTION[0]+self.score_width,\
-                                               Constants.RESOLUTION[1]), 0, 32)
+            self.screen = pygame.display.set_mode((Constants.RESOLUTION[0]+self.score_width,
+                                                   Constants.RESOLUTION[1]), 0, 32)
 
         pygame.display.set_caption(Constants.CAPTION)
 
@@ -82,7 +80,7 @@ class Client(snakePost):
         self.scorescreen.fill((100, 100, 100))
 
         # timers
-        self.clock = pygame.time.Clock();
+        self.clock = pygame.time.Clock()
         self.current_time = 0
 
         self.move_snake_timer = Timer(1.0/Constants.SNAKE_SPEED*1000, self.current_time, periodic=True)
@@ -117,8 +115,8 @@ class Client(snakePost):
                     self.me.set_ready()
 
     def run(self):
-        whole_second=0
-        self.running=True
+        whole_second = 0
+        self.running = True
         while self.running:
             # time tracking
             self.current_time += self.clock.tick(Constants.FPS)
@@ -176,8 +174,8 @@ class Client(snakePost):
         else:
             send = '{"body_p": '
             send += json.dumps(self.listBody) + '}'
-        # envoie non sécurisé
-        self.envoiNonSecure(self.sClient, send, (self.addIP, self.nPort))#a vérifier
+        # envoie non sécurisé, a verif
+        self.envoiNonSecure(self.sClient, send, (self.addIP, self.nPort))
         pass
     # methode qui envoie un message qui dit au serveur si on est ready ou pas
     def msgReady(self):
