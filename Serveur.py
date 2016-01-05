@@ -64,8 +64,8 @@ class Serveur(snakeChannel):
         if(self.listFood[0] == None):
             print "liste des pommes vides"
         else:
-            send = "{'foods': "
-            send += json.dumps(self.listFood) + "}"
+            send = '{"foods": '
+            send += json.dumps(self.listFood) + '}'
         #Envoie securisé a tout les clients la liste des pommes
         self.broadcast(send,True)
 
@@ -86,14 +86,14 @@ class Serveur(snakeChannel):
         else:
             long = len(self.snakesDico)
             cpt = 0
-            send = "{'snakes': ["
+            send = '{"snakes": ['
             for i in self.snakesDico:
                 cpt += 1
                 if cpt < long:
-                    send += "['"+i+"',"+json.dumps(self.snakesDico[i])+"],"
+                    send += '["'+i+'",'+json.dumps(self.snakesDico[i])+'],'
                 else:
-                    send += "['"+i+"',"+json.dumps(self.snakesDico[i])+"]"
-            send += "]}"
+                    send += '["'+i+'",'+json.dumps(self.snakesDico[i])+']'
+            send += ']}'
 
         #envoie non fiable
         self.broadcast(send,False)
@@ -105,22 +105,22 @@ class Serveur(snakeChannel):
         if(self.listPlayersInfo[0] == None):
             print "liste des info player vide"
         else:
-            send = "{'players_info': "
-            send += json.dumps(self.listPlayersInfo) + "}"
+            send = '{"players_info": "'
+            send += json.dumps(self.listPlayersInfo) + '"}'
         #envoie fiable
         pass
 
     #Contient le nom du joueur qui a perdu et qui doit recommencer depuis le debut
     def msgGame_over(self,nomJoueur):
         #formatage JSON
-        send = "{'game_over':"+ "'" + nomJoueur+"'"+ "}"
+        send = '{"game_over":"'+ nomJoueur+'"}'
         #envoie fiable
         self.broadcast(send,True)
 
     #previens un joueur qu'il est rentrer dans une pomme
     def msgGrow(self,nomJoueur):
         #formatage JSON
-        send = "{'grow':"+ "'" + nomJoueur +"'"+ "}"
+        send = '{"grow":"'+ nomJoueur+'"}'
         #envoie fiable
         self.broadcast(send,True)
 
