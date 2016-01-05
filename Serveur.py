@@ -48,6 +48,7 @@ class Serveur(snakePost):
         #super(Serveur, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
         print 'Serveur ecoute sur le port : ', self.nPort, '...'
 
+
     #
     #   gestionMessage est la methode qui s'occupe des messages recus et ceux que le serveur doit envoyer
     #   Les messages sont definit par le cahier des charges selon la manière suivante :
@@ -82,37 +83,65 @@ class Serveur(snakePost):
         if(self.listFood[0] == None):
             print "liste des pommes vides"
         else:
-            send = "{'foods': "
-            send += json.dumps(self.listFood) + "}"
+            send = '{"foods": '
+            send += json.dumps(self.listFood) + '}'
         #Envoie securisé a tout les clients la liste des pommes
-        for i in self.clients:
-            snakePost.envoiSecure(self, self.sServeur, send, self.clients[i])
+        self.broadcast(send,True)
 
-    #envoie la liste des positions du corps de tout les snakes dans la partie, préfixées par l'identifiant
+    def broadcast(self,data,secure):
+        if secure:
+            for i in self.clients:
+                snakePost.envoiSecure(self,self.sServeur,data,i)
+        elif not secure:
+            for i in self.clients:
+                snakePost.envoiNonSecure(self,self.sServeur,data,i)
+
+    #  envoie la liste des positions du corps de tout les snakes dans la partie, préfixées par l'identifiant
     #du joueur. snakesDico => dicitonnaire nom du joueur, position
     def msgSnakes(self):
-        #formatage des données en JSON
-        #envoie non fiable
-        pass
+        # formatage des données en JSON
+        if(self.listFood.get(0) == None):
+            print "dico position du corps vide"
+        else:
+            long = len(self.snakesDico)
+            cpt = 0
+            send = '{"snakes": ['
+            for i in self.snakesDico:
+                cpt += 1
+                if cpt < long:
+                    send += '["'+i+'",'+json.dumps(self.snakesDico[i])+'],'
+                else:
+                    send += '["'+i+'",'+json.dumps(self.snakesDico[i])+']'
+            send += ']}'
 
-    #msg contenant toute les infos des joueurs: nom du joueur, sa couleur, son score, ready ou pas
-    #listPlayersInfo => liste contenant toute les infos
+        # envoie non fiable
+        self.broadcast(send,False)
+
+    # msg contenant toute les infos des joueurs: nom du joueur, sa couleur, son score, ready ou pas
+    # listPlayersInfo => liste contenant toute les infos
     def msgPlayers_info(self):
-        #formatage JSON
-        #envoie fiable
+        # formatage JSON
+        if(self.listPlayersInfo[0] == None):
+            print "liste des info player vide"
+        else:
+            send = '{"players_info": "'
+            send += json.dumps(self.listPlayersInfo) + '"}'
+        # envoie fiable
         pass
 
-    #Contient le nom du joueur qui a perdu et qui doit recommencer depuis le debut
-    def msgGame_over(nomJoueur):
-        #formatage JSON
-        #envoie fiable
-        pass
+    # Contient le nom du joueur qui a perdu et qui doit recommencer depuis le debut
+    def msgGame_over(self,nomJoueur):
+        # formatage JSON
+        send = '{"game_over":"'+ nomJoueur+'"}'
+        # envoie fiable
+        self.broadcast(send,True)
 
-    #previens un joueur qu'il est rentrer dans une pomme
-    def msgGrow(nomJoueur):
-        #formatage JSON
-        #envoie fiable
-        pass
+    # previens un joueur qu'il est rentrer dans une pomme
+    def msgGrow(self,nomJoueur):
+        # formatage JSON
+        send = '{"grow":"'+ nomJoueur+'"}'
+        # envoie fiable
+        self.broadcast(send,True)
 
 
 if __name__=="__main__":

@@ -204,15 +204,23 @@ class Client(snakePost):
     # envoie non securisé. listBody => contient les positions des différentes parties du corps
     def msgBody_p(self):
         #formatage des données en JSON
+        if(self.listBody[0] == None):
+            print "liste des corps vides"
+        else:
+            send = '{"body_p": '
+            send += json.dumps(self.listBody) + '}'
         # envoie non sécurisé
+        self.envoiNonSecure(self.sClient,send,(self.addIP, self.nPort))#a vérifié
         pass
     #methode qui envoie un message qui dit au serveur si on est ready ou pas
-    def msgReady(nomJoueur):
+    def msgReady(self):
         #formatage des données en JSON
+        send = '{"ready":"'+True+'"}'
         #envoie fiable
+        self.envoiSecure(self.sClient,send,(self.addIP,self.nPort))
         pass
 
 if __name__=="__main__":
-    c = Client("127.0.0.1", 6667, "green", "Rafael").run()
+    c = Client("192.168.1.118",7777, "green", "Rafael").run()
     #c.connexion()
     #c.partie()
