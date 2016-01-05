@@ -28,24 +28,27 @@ from snakePost import snakePost
 UDP_ADD_IP = "127.0.0.1"
 UDP_NUM_PORT = 6667
 BUFFER_SIZE = 4096
-SEQUENCE_OUTBAND = 0xffffff
+SEQUENCE_OUTBAND = 0xffffffff
 
 # Declaration de variables globales
 
-class Client(snakeChannel):
+class Client(snakePost):
     #constructeur de la class Client
     def __init__(self, ip=UDP_ADD_IP, port=UDP_NUM_PORT, couleur="blue", nickname="invite"):
-        super(Client, self).__init__()
-        self.sClient = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        super(Client, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM), ip, port, couleur, nickname)
+        #super(Client, self).__init__()
+        #self.sClient = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.addIP = ip
-        self.nPort = port
-        self.color = couleur
-        self.nickname = nickname
-        self.listBody = []
-
-        self.connexion()
+        self.nPort = int(port)
 
         pygame.init()
+        self.clock = pygame.time.Clock()
+        self.current_time = 0
+        self.clientConnexion()
+        print "Connected"
+        #self.send_timer = Timer(SEND_INTERVAL, 0, True)
+
+        self.listBody = []
 
         #get preferences
         self.preferences = Preferences()
@@ -76,14 +79,14 @@ class Client(snakeChannel):
         self.nickname = self.preferences.get("nickname")
         self.f = Foods()
 
-        #Score manager
+        # Score manager
         self.scores = Scores((self.score_width, Constants.RESOLUTION[1]))
 
-        #add our own score, the server will send us the remaining one at connection
+        # add our own score, the server will send us the remaining one at connection
         self.scores.new_score(self.preferences.get("nickname"),\
                         pygame.color.THECOLORS[self.preferences.get("color")])
 
-	#game area background color
+	    # game area background color
         self.gamescreen.fill(Constants.COLOR_BG)
         self.scorescreen.fill((100, 100, 100))
 
@@ -96,9 +99,9 @@ class Client(snakeChannel):
         self.blink_banner_timer = Timer(500, self.current_time, periodic=True)
         self.new_apple_timer = Timer(Constants.NEW_APPLE_PERIOD*1000, self.current_time, periodic=True)
 
-        #super(Client, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
-        #self.socket.settimeout(10) # definit le timeout
-        #self.socket.connect((self.addIP,self.nPort))
+        # super(Client, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
+        # self.socket.settimeout(10) # definit le timeout
+        # self.socket.connect((self.addIP,self.nPort))
 
     #
     #   connexion est la methode qui permettra au client de se connecter au serveur
@@ -109,30 +112,31 @@ class Client(snakeChannel):
     #       TX  :   Connect /nom_cles/valeur_cles/.../...
     #       RX  :   Connected B
     #
-    def connexion(self):
-        self.sClient.connect((self.addIP, self.nPort))
-        print 'Connexion du client...'
-        etatConnexion = False
-        while not etatConnexion:
-            etatConnexion = self.clientConnexion(self.sClient)
-        print 'Connexion etablie !'
+    # def connexion(self):
+    #     #self.sClient.connect((self.addIP, self.nPort))
+    #     print 'Connexion du client...'
+    #     etatConnexion = False
+    #     while not etatConnexion:
+    #         #etatConnexion = self.clientConnexion(self.sClient)
+    #         etatConnexion = self.clientConnexion()
+    #     print 'Connexion etablie !'
 
     def process_events(self):
         #key handling
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                   self.running=False
+                    self.running = False
                 if event.key == pygame.K_UP:
-                   self.me.action(1)
+                    self.me.action(1)
                 if event.key == pygame.K_DOWN:
-                   self.me.action(2)
+                    self.me.action(2)
                 if event.key == pygame.K_LEFT:
-                   self.me.action(3)
+                    self.me.action(3)
                 if event.key == pygame.K_RIGHT:
-                   self.me.action(4)
+                    self.me.action(4)
                 if event.key == pygame.K_SPACE:
-                   self.me.set_ready()
+                    self.me.set_ready()
 
     def run(self):
         whole_second=0
@@ -207,8 +211,6 @@ class Client(snakeChannel):
         #formatage des données en JSON
         #envoie fiable
         pass
-
-
 
 if __name__=="__main__":
     c = Client("127.0.0.1", 6667, "green", "Rafael").run()

@@ -12,38 +12,41 @@
 #
 #   Nom fichier     :   Serveur.py
 # ##############################################################################
+import sys
 
-import socket
+import pygame
 import random
 import json
 
-from snakeChannel import snakeChannel
-from snakePost import snakePost
-
-# Constantes
-MAX_CLIENT = 10
-UDP_ADD_IP = "127.0.0.1"
-UDP_NUM_PORT = 6667
-BUFFER_SIZE = 4096
-PNUM = 19 # meme valeur que dans enonce
-SEQUENCE_OUTBAND = 0xffffff
+from constants import *
+from snakeChannel import *
+from snakePost import *
+from joueurs import *
 
 # Declaration de variables globales
 
-class Serveur(snakeChannel):
-    def __init__(self, addIp=UDP_ADD_IP, nPort=UDP_NUM_PORT):
-        super(Serveur, self).__init__()
+class Serveur(snakePost):
+    def __init__(self):
+        super(Serveur, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM), UDP_ADD_IP, UDP_NUM_PORT)
+        pygame.init()
+        self.clock = pygame.time.Clock()
+        self.current_time = 0
+        #self.send_timer = Timer(SEND_INTERVAL, 0, True)
+        self.addIp = UDP_ADD_IP
+        self.nPort = UDP_NUM_PORT
+        self.canal.setblocking(False)     # Non-blocking
+        self.canal.bind((self.addIp, self.nPort))
+
         self.clients = {}
-        self.listFood = []
-        self.listPlayersInfo = []
-        self.snakesDico = {}
-        self.sServeur = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.addIp = addIp
-        self.nPort = nPort
-        self.sServeur.bind((self.addIp, self.nPort))
+        self.nourriture = []
+
+        #self.listPlayersInfo = []
+        #self.snakesDico = {}
+        #self.sServeur = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        #self.sServeur.bind((self.addIp, self.nPort))
         #super(Serveur, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
         print 'Serveur ecoute sur le port : ', self.nPort, '...'
-
 
     #
     #   gestionMessage est la methode qui s'occupe des messages recus et ceux que le serveur doit envoyer
@@ -54,13 +57,28 @@ class Serveur(snakeChannel):
     #       RX  :   Connect /nom_cles/valeur_cles/.../...
     #       TX  :   Connected B
     #
-    def gestionMessages(self):
-        while(True):
-            self.serveurConnexion(self.sServeur, (self.addIp, self.nPort))
+    # def gestionMessages(self):
+    #     while(True):
+    #         self.serveurConnexion()
 
-    #Methode pour les messages food, listFood => liste avec toute les coordonnées des pommes
+    def run(self):
+        while (True):
+            # check si des messages sont a envoyer
+            #self.gestionMessages()
+            self.process_buffer()
+            # Ecoute d'eventuels messages
+            donnees, canal = self.ecouteServeur()
+
+            if donnees is not None:
+                if not self.clients.get(canal):
+                    self.clients[canal] = Joueurs(self.connexions[canal][C_NICKNAME], self.connexions[canal][C_COULEUR],
+                                                  0, False, [])
+            # else:
+                # return None, None
+
+    # Methode pour les messages food, listFood => liste avec toute les coordonnées des pommes
     def msgFood(self):
-        #formatage des données en JSON
+        # formatage des données en JSON
         if(self.listFood[0] == None):
             print "liste des pommes vides"
         else:
@@ -68,7 +86,7 @@ class Serveur(snakeChannel):
             send += json.dumps(self.listFood) + "}"
         #Envoie securisé a tout les clients la liste des pommes
         for i in self.clients:
-         snakePost.envoiSecure(self,self.sServeur,send,)
+            snakePost.envoiSecure(self, self.sServeur, send, self.clients[i])
 
     #envoie la liste des positions du corps de tout les snakes dans la partie, préfixées par l'identifiant
     #du joueur. snakesDico => dicitonnaire nom du joueur, position
@@ -98,5 +116,6 @@ class Serveur(snakeChannel):
 
 
 if __name__=="__main__":
-    serv = Serveur()
-    serv.gestionMessages()
+    Serveur().run()
+    #serv = Serveur()
+    #serv.gestionMessages()
