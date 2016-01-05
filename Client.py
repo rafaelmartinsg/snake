@@ -36,8 +36,6 @@ class Client(snakePost):
     #constructeur de la class Client
     def __init__(self, ip=UDP_ADD_IP, port=UDP_NUM_PORT, couleur="blue", nickname="invite"):
         super(Client, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM), ip, port, couleur, nickname)
-        #super(Client, self).__init__()
-        #self.sClient = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.addIP = ip
         self.nPort = int(port)
 
@@ -46,14 +44,14 @@ class Client(snakePost):
         self.current_time = 0
         self.clientConnexion()
         print "Connected"
-        #self.send_timer = Timer(SEND_INTERVAL, 0, True)
+        # self.send_timer = Timer(SEND_INTERVAL, 0, True)
 
         self.listBody = []
 
-        #get preferences
+        # get preferences
         self.preferences = Preferences()
 
-        #resolution, flags, depth, display
+        # resolution, flags, depth, display
         self.unit = Constants.RESOLUTION[0]/Constants.UNITS
         self.banner = Banner()
         self.score_width = self.unit*15
@@ -67,14 +65,14 @@ class Client(snakePost):
 
         pygame.display.set_caption(Constants.CAPTION)
 
-        #game area surface
+        # game area surface
         self.gamescreen = pygame.Surface(Constants.RESOLUTION)
-        #score area rectangle surface
+        # score area rectangle surface
         self.scorescreen = pygame.Surface((self.score_width, Constants.RESOLUTION[1]))
 
-        #Snake and foods manager
-        self.me = Snake(color = pygame.color.THECOLORS[self.preferences.get("color")],\
-                     nickname = self.preferences.get("nickname"))
+        # Snake and foods manager
+        self.me = Snake(color=pygame.color.THECOLORS[self.preferences.get("color")],
+                        nickname=self.preferences.get("nickname"))
 
         self.nickname = self.preferences.get("nickname")
         self.f = Foods()
@@ -83,14 +81,14 @@ class Client(snakePost):
         self.scores = Scores((self.score_width, Constants.RESOLUTION[1]))
 
         # add our own score, the server will send us the remaining one at connection
-        self.scores.new_score(self.preferences.get("nickname"),\
-                        pygame.color.THECOLORS[self.preferences.get("color")])
+        self.scores.new_score(self.preferences.get("nickname"),
+                              pygame.color.THECOLORS[self.preferences.get("color")])
 
-	    # game area background color
+        # game area background color
         self.gamescreen.fill(Constants.COLOR_BG)
         self.scorescreen.fill((100, 100, 100))
 
-        #timers
+        # timers
         self.clock = pygame.time.Clock();
         self.current_time = 0
 
@@ -98,10 +96,6 @@ class Client(snakePost):
         self.blink_snake_timer = Timer(1.0/Constants.SNAKE_BLINKING_SPEED*1000, self.current_time, periodic=True)
         self.blink_banner_timer = Timer(500, self.current_time, periodic=True)
         self.new_apple_timer = Timer(Constants.NEW_APPLE_PERIOD*1000, self.current_time, periodic=True)
-
-        # super(Client, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
-        # self.socket.settimeout(10) # definit le timeout
-        # self.socket.connect((self.addIP,self.nPort))
 
     #
     #   connexion est la methode qui permettra au client de se connecter au serveur
@@ -111,18 +105,9 @@ class Client(snakePost):
     #       RX  :   Token B A ProtocoleNumber
     #       TX  :   Connect /nom_cles/valeur_cles/.../...
     #       RX  :   Connected B
-    #
-    # def connexion(self):
-    #     #self.sClient.connect((self.addIP, self.nPort))
-    #     print 'Connexion du client...'
-    #     etatConnexion = False
-    #     while not etatConnexion:
-    #         #etatConnexion = self.clientConnexion(self.sClient)
-    #         etatConnexion = self.clientConnexion()
-    #     print 'Connexion etablie !'
 
     def process_events(self):
-        #key handling
+        # key handling
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
@@ -142,85 +127,72 @@ class Client(snakePost):
         whole_second=0
         self.running=True
         while self.running:
-            #time tracking
-            self.current_time+=self.clock.tick(Constants.FPS)
+            # time tracking
+            self.current_time += self.clock.tick(Constants.FPS)
 
-            #check if the snake is still alive
+            # check if the snake is still alive
             if not self.me.alive:
-                self.me.alive=True
+                self.me.alive = True
                 self.me.restart()
 
-            #check if game need more food
+            # check if game need more food
             if self.new_apple_timer.expired(self.current_time):
                 self.f.make()
 
-            #check if we need to move our own snake's state
-            #if we do, send an update of our position to
-            #the server
+            # check if we need to move our own snake's state if we do, send an update of our position to the server
             if self.move_snake_timer.expired(self.current_time):
                 self.me.move()
 
-            #check if we need to blink the unready snakes (unready state)
+            # check if we need to blink the unready snakes (unready state)
             if self.blink_snake_timer.expired(self.current_time):
                 self.me.blink()
 
-            #check if snake has eaten
+            # check if snake has eaten
             if self.me.ready:
                 if self.f.check(self.me.head):
                     self.me.grow(Constants.GROW)
-                    self.scores.inc_score(self.nickname,1)
+                    self.scores.inc_score(self.nickname, 1)
 
-            #cleanup background
+            # cleanup background
             self.gamescreen.fill(Constants.COLOR_BG)
 
-            #draw scores
+            # draw scores
             self.scores.draw(self.screen)
 
-            #draw all snakes positions as last seen by the server
-            #we do not compute their positions ourselves!
+            # draw all snakes positions as last seen by the server
+            # we do not compute their positions ourselves!
             self.me.draw(self.gamescreen)
 
-            #draw food
+            # draw food
             self.f.draw(self.gamescreen)
 
-            #process external events (keyboard,...)
+            # process external events (keyboard,...)
             self.process_events()
 
-            #then update display
-            #update game area on screen container
-            self.screen.blit(self.gamescreen,(self.score_width,0))
+            # then update display, update game area on screen container
+            self.screen.blit(self.gamescreen, (self.score_width, 0))
 
             pygame.display.update()
 
-    def partie(self):
-        #A VERIFIER...
-
-        #snakePost(snakeChannel)
-        sp = snakePost()
-        sp.envoiNonSecure(self.sClient, "blablabla", (self.addIP, self.nPort))
-        pass
-
-    #Methode qui envoie la liste qui contient les coordonnées du corp d'un serpent
+    # Methode qui envoie la liste qui contient les coordonnées du corp d'un serpent
     # envoie non securisé. listBody => contient les positions des différentes parties du corps
     def msgBody_p(self):
-        #formatage des données en JSON
-        if(self.listBody[0] == None):
+        # formatage des données en JSON
+        if self.listBody[0] == None:
             print "liste des corps vides"
         else:
             send = '{"body_p": '
             send += json.dumps(self.listBody) + '}'
         # envoie non sécurisé
-        self.envoiNonSecure(self.sClient,send,(self.addIP, self.nPort))#a vérifié
+        self.envoiNonSecure(self.sClient, send, (self.addIP, self.nPort))#a vérifier
         pass
-    #methode qui envoie un message qui dit au serveur si on est ready ou pas
+    # methode qui envoie un message qui dit au serveur si on est ready ou pas
     def msgReady(self):
-        #formatage des données en JSON
+        # formatage des données en JSON
         send = '{"ready":"'+True+'"}'
-        #envoie fiable
-        self.envoiSecure(self.sClient,send,(self.addIP,self.nPort))
+        # envoie fiable
+        self.envoiSecure(self.sClient, send, (self.addIP, self.nPort))
         pass
 
-if __name__=="__main__":
-    c = Client("192.168.1.118",7777, "green", "Rafael").run()
-    #c.connexion()
-    #c.partie()
+if __name__ == "__main__":
+    Client(UDP_ADD_IP, UDP_NUM_PORT, "green", "Rafael").run()

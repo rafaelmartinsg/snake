@@ -12,14 +12,10 @@
 #
 #   Nom fichier     :   snakePost.py
 # ##############################################################################
-import socket  # Import socket module
 import random
-import json
-from timer import *
-from select import *
-
 import pygame
 import struct
+
 from constants import *
 from pygame.locals import *
 from snakeChannel import snakeChannel
@@ -33,43 +29,42 @@ class snakePost(snakeChannel):
     def __init__(self, channel, ip, port, color='', nickname='', udp=False):
         # Appelle le constructeur de la classe qu'on hérite
         super(snakePost, self).__init__(channel, ip, port, color, nickname)
-        # dictionnaire de host,port qui contient message secure
-        self.messagesSecures = {}
-        self.messagesNormaux = {}
 
-        self.last_ack = {}  # Last ack number
-        self.seq_number = {}  # Last seq number
-        self.ack_received = {}
-        self.secure_in_network = {}
+        self.messagesSecures = {} # Contient tous les messages secures a envoyer pour chaque client
+        self.messagesNormaux = {} # Contient tous les messages normaux a envoyer pour chaque client
+        self.last_ack = {}  # Contient la valeur du dernier ack recu par les clients
+        self.seq = {}  # Contient le dernier numero de sequence du client
+        self.ackRecus = {} # Permet d'avoir un ensemble des ack recus afin de pouvoir traites les messages secures
+        self.attenteSecureReseau = {} # Permet de savoir si un client a un message secure sur le reseau
 
         pygame.init()
         pygame.time.set_timer(MESSAGE_SECURE, 30)
         self.numSeq = 0
-        self.udp = False
+        self.commUDP = udp
 
     def gestionMessages(self, donnees, canal):
+        # Si on recoit des donnees
         if donnees is not None and len(donnees) >= 4:
-            seq_number = struct.unpack('>H', donnees[:2])[0]
-            ack_number = struct.unpack('>H', donnees[2:4])[0]
+            seq = struct.unpack('>H', donnees[:2])[0]
+            ack = struct.unpack('>H', donnees[2:4])[0]
 
-            print "SEQ_NUMBER : " + str(seq_number) + " - ACK_NUMBER " + str(ack_number)
+            print "SEQ_NUMBER : " + str(seq) + " - ACK_NUMBER " + str(ack)
 
-            # SECURE - needs ack
-            if seq_number != 0 and ack_number == 0:
-                self.ack(seq_number, canal)
+            # Message secure --> il faut ack
+            if seq != 0 and ack == 0:
+                self.ack(seq, canal)
 
-            # If we receive an ack
-            if ack_number != 0 and len(self.last_seq_number[canal]) > 0:
-                    # and (seq_number == 0 or seq_number == self.last_seq_number[canal][0]):
-                # Compare the ack_number with the last seq_number
-                if ack_number == self.last_seq_number[canal][0]:
+            # Lorsque l'on recoit un ack
+            if ack != 0 and len(self.last_seq[canal]) > 0:
+                # Compare the ack with the last seq
+                if ack == self.last_seq[canal][0]:
                     # If the ack is correct, remove the secure message from the list
                     self.messagesSecures[canal].pop(0)
-                    self.last_seq_number[canal].pop(0)
-                    self.secure_in_network[canal] = False
-                    self.ack_received[canal] = True
-                    if seq_number != 0:
-                        self.ack(seq_number, canal)
+                    self.last_seq[canal].pop(0)
+                    self.attenteSecureReseau[canal] = False
+                    self.ackRecus[canal] = True
+                    if seq != 0:
+                        self.ack(seq, canal)
                 else:
                     if self.udp:  # on udp
                         self.channel.sendto(self.messagesSecures[canal][0][0], canal)
@@ -98,20 +93,15 @@ class snakePost(snakeChannel):
             # print "[send] Not secure : donnees = ", donnees, " - to : ", canal
         else:
             if len(self.messagesSecures[canal]) < MAX_CLIENT:
-                self.last_seq_number[canal].append(random.randint(1, (1 << 16) - 1))
+                self.last_seq[canal].append(random.randint(1, (1 << 16) - 1))
                 self.messagesSecures[canal].append(
-                    (struct.pack('>2H', self.last_seq_number[canal][-1], 0) + donnees, canal))
-                print "SEQ_NUMBER : " + str(self.last_seq_number[canal][-1]) + " - ACK_NUMBER " + str(0)
+                    (struct.pack('>2H', self.last_seq[canal][-1], 0) + donnees, canal))
+                print "SEQ_NUMBER : " + str(self.last_seq[canal][-1]) + " - ACK_NUMBER " + str(0)
             else:
-                print "Buffer secure is full, try again later."
+                print "Buffer est plein, ..."
 
     def envoiNonSecure(self, s, donnees, host):
-        # snakeChannel.envoi(s, donnees, host, sequence)
         self.envoi(s, donnees, host, 0)
-
-    # def ackSecureMessage(self, host, sequence, donnees):
-    #    if self.messagesSecures[host].get(0) == (donnees, sequence):
-    #        self.messagesSecures[host].pop(0)
 
     def receptionPost(self, host, seq, ack, payload):
         if ack != 0:
@@ -150,10 +140,8 @@ class snakePost(snakeChannel):
         """
         self.current_time += self.clock.tick(FPS)
         for canal in self.connexions:
-            if self.secure_in_network.get(canal) and \
-                    self.secure_in_network[canal] and \
-                    not self.ack_received[canal] and \
-                    self.ack_timer.expired(self.current_time):
+            if self.attenteSecureReseau.get(canal) and self.attenteSecureReseau[canal] and not self.ackRecus[canal] \
+                    and self.ack_timer.expired(self.current_time):
                 # RE-send SECURE
                 # If we didn't received ack for secure message, resend the message
                 data = self.messagesSecures[canal][0][0]
@@ -163,18 +151,16 @@ class snakePost(snakeChannel):
                 else:  # on snake_channel
                     self.send_channel(data, canal)
 
-            elif self.messagesSecures.get(canal) and \
-                    self.messagesSecures[canal] and \
-                    not self.secure_in_network[canal]:
+            elif self.messagesSecures.get(canal) and self.messagesSecures[canal] and not self.attenteSecureReseau[canal]:
                 # Send SECURE
                 # Get the first secure packet to send
                 # We don't pop it because we will wait for the ack
                 data = self.messagesSecures[canal][0][0]
-                if not self.secure_in_network[canal]:
+                if not self.attenteSecureReseau[canal]:
                     # We are sending a secure message, we need to receive a ack and
                     # we can't have two secure message at the same time on the same channel
-                    self.ack_received[canal] = False
-                    self.secure_in_network[canal] = True
+                    self.ackRecus[canal] = False
+                    self.attenteSecureReseau[canal] = True
 
                     if self.udp:  # on udp
                         self.channel.sendto(data, canal)
@@ -184,7 +170,6 @@ class snakePost(snakeChannel):
 
                     # Activate the timer in order to resend the message if it expires
                     self.ack_timer.activate(0)
-
             else:
                 # Send NORMAL
                 if self.messagesNormaux.get(canal) and \
@@ -204,9 +189,9 @@ class snakePost(snakeChannel):
             self.messagesSecures[canal] = []
         if not self.last_ack.get(canal):
             self.last_ack[canal] = None
-        if not self.last_seq_number.get(canal):
-            self.last_seq_number[canal] = []
-        if not self.ack_received.get(canal):
-            self.ack_received[canal] = None
-        if not self.secure_in_network.get(canal):
-            self.secure_in_network[canal] = None
+        if not self.last_seq.get(canal):
+            self.last_seq[canal] = []
+        if not self.ackRecus.get(canal):
+            self.ackRecus[canal] = None
+        if not self.attenteSecureReseau.get(canal):
+            self.attenteSecureReseau[canal] = None

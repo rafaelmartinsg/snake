@@ -42,29 +42,28 @@ class snakeChannel(object):
         etat = 0
         A = random.randint(0, (1 << 32) - 1)
         B = 0
-        #couleur = pygame.color.THECOLORS
+        # couleur = pygame.color.THECOLORS
         while (etat < 3):
-            #try:
             # Si etat 0
-            if (etat == 0):
+            if etat == 0:
                 self.envoiSnakeChann("GetToken " + str(A) + " Snake", (self.addIP, self.nPort),
                                      SEQUENCE_OUTBAND)
                 print "Client envoi : GetToken", A, "Snake"
                 etat += 1
             # Si etat 1
-            elif (etat == 1):
+            elif etat == 1:
                 controlToken, client = self.receptionSnakeChann
                 print "Client recoit : ", controlToken
-                if (controlToken is None):
+                if controlToken is None:
                     etat -= 1
                 else:
                     token = controlToken.split()
                     # Controle du A recu
-                    if (token[2] == str(A)):
+                    if token[2] == str(A):
                         B = token[1]
                         pNum = token[3]
                         self.envoiSnakeChann("Connect \\challenge\\" + str(B) + "\\protocol\\" + str(pNum) +
-                                   "\\color\\" + str(self.couleur) + "\\nickname\\" + str(self.nickname),
+                                             "\\color\\" + str(self.couleur) + "\\nickname\\" + str(self.nickname),
                                              (self.addIP, self.nPort), SEQUENCE_OUTBAND)
                         print "Client envoi : Connect \challenge\\", B, \
                             "\\protocol\\", pNum, "\\color\\", str(self.couleur), "\\nickname\\", str(self.nickname)
@@ -73,7 +72,7 @@ class snakeChannel(object):
                         etat = 0
                         print "Erreur token, retour etat initial (0)"
             # Si etat 3
-            elif (etat == 2):
+            elif etat == 2:
                 controlConnexion, client = self.receptionSnakeChann
                 print "Client recoit : ", controlConnexion
                 if controlConnexion is None:
@@ -88,10 +87,7 @@ class snakeChannel(object):
             else:
                 print "Une erreur est survenue pendant la connexion du client."
                 return False
-            #except:
-                #print("problème au niveau du client")
 
-    @property
     def receptionSnakeChann(self):
         """Receive data with sequence number
 
@@ -132,21 +128,6 @@ class snakeChannel(object):
     #                   - sequence  : utile uniquement pour l'envoi de sequence hors bande
     #
     def envoiSnakeChann(self, donnees, host, sequence):
-        # Sequence de connexion
-        # if (sequence == SEQUENCE_OUTBAND or sequence == 0):
-        #     self.connexions[host] = sequence
-        # elif (sequence == None):
-        #     print "test sequence == none"
-        #     self.connexions[host] = 0
-        #     self.connexions[host] = (self.connexions[host] + 1)
-        #
-        # # Envoi de donnees au format JSON
-        # #   cause : le type de string envoye varia a chaque fois et il est donc difficile
-        # #           de facilement recuperer les donnees envoyer avec unpack.
-        # #           Avec l'utilisation de JSON, on formate nos envois et facilite la reception
-        # s.sendto(json.dumps({'sequence': self.connexions[host], 'donnees': donnees}), host)
-        #
-
         if self.connexionsNonEtablies.get(host) is None:
             self.connexionsNonEtablies[host] = SEQUENCE_OUTBAND
 
@@ -167,7 +148,6 @@ class snakeChannel(object):
     def serveurConnexion(self):
         print 'Serveur ecoute sur le port : ', self.nPort, '...'
         print "En attente de clients ..."
-        # while(True):
         try:
             donnees, client = self.receptionSnakeChann
 
@@ -183,7 +163,8 @@ class snakeChannel(object):
                     self.A = random.randint(0, (1 << 32) - 1)
                     B = token[1]
 
-                    self.envoiSnakeChann("Token " + str(self.A) + " " + str(B) + " " + str(PNUM), client, SEQUENCE_OUTBAND)
+                    self.envoiSnakeChann("Token " + str(self.A) + " " + str(B) + " " + str(PNUM), client,
+                                         SEQUENCE_OUTBAND)
                     print "Serveur envoi : Token ", self.A, " ", B, " ", PNUM
 
                 elif token[0] == "Connect":
@@ -194,11 +175,8 @@ class snakeChannel(object):
                     print "couleur == ", couleur
                     print "nickname == ", nickname
 
-                    print "valeur de A recue == ", int(separateur[2])
-
                     # Control de la valeur de B
                     if (len(separateur) < 3) or (int(self.A) != int(separateur[2])):
-                        print "valeur de A == ", int(self.A)
                         print "Suivant...!"
                         return None, None
 
@@ -207,8 +185,6 @@ class snakeChannel(object):
                     self.connexions[client][C_COULEUR] = couleur
                     self.connexions[client][C_NICKNAME] = nickname
                     print "Serveur envoi : Connected ", self.A
-                    # donnees, client = self.reception(s)
-                    # print "donnee : ",donnees
                 print "En attente de clients ..."
             else:
                 # Client connecte

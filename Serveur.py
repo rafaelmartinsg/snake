@@ -38,14 +38,10 @@ class Serveur(snakePost):
         self.canal.bind((self.addIp, self.nPort))
 
         self.clients = {}
-        self.nourriture = []
+        self.listfood = []
 
         #self.listPlayersInfo = []
         #self.snakesDico = {}
-        #self.sServeur = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-        #self.sServeur.bind((self.addIp, self.nPort))
-        #super(Serveur, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
         print 'Serveur ecoute sur le port : ', self.nPort, '...'
 
 
@@ -65,7 +61,7 @@ class Serveur(snakePost):
     def run(self):
         while (True):
             # check si des messages sont a envoyer
-            #self.gestionMessages()
+            # self.gestionMessages()
             self.process_buffer()
             # Ecoute d'eventuels messages
             donnees, canal = self.ecouteServeur()
@@ -97,10 +93,10 @@ class Serveur(snakePost):
                 snakePost.envoiNonSecure(self,self.sServeur,data,i)
 
     #  envoie la liste des positions du corps de tout les snakes dans la partie, préfixées par l'identifiant
-    #du joueur. snakesDico => dicitonnaire nom du joueur, position
+    # du joueur. snakesDico => dicitonnaire nom du joueur, position
     def msgSnakes(self):
         # formatage des données en JSON
-        if(self.listFood.get(0) == None):
+        if self.listFood.get(0) == None:
             print "dico position du corps vide"
         else:
             long = len(self.snakesDico)
