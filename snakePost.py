@@ -52,6 +52,7 @@ class snakePost(snakeChannel):
 
     def gestionMessages(self, donnees, canal):
         """
+
         Methode permettant de traiter les messages en circulation dans le canal. Elle gere le cas du message secure ou
             du message normal a envoyer. Lorsqu'un message secure est a envoyer, les ack de celui-ci sont egalement
             geres. A la reception du message, on separe le numero de sequence et la valeur du ack afin de savoir quel
@@ -100,6 +101,7 @@ class snakePost(snakeChannel):
 
     def ecouteServeur(self):
         """
+
         Methode qui met le serveur en ecoute de nouveaux messages. via la fonction "serveurConnexion" (snakeChannel)
 
         Lors de la reception d'un nouveau message, on fait appel a la fonction "gestionMessages" afin de traiter le
@@ -120,6 +122,7 @@ class snakePost(snakeChannel):
 
     def envoiSnakePost(self, donnees, canal, secure=False):
         """
+
         Methode qui permet l'envoi des messages. Les messages dit "normaux" sont stockes dans un dictionnaire. Les
             messages dit "securises" sont aussi stockes dans un dictionnaire ayant une taille fixee. Si le dictionnaire
             des messages securises est plein, un message d'avertissement est envoye au joueur. Avant toute chose, on
@@ -164,6 +167,7 @@ class snakePost(snakeChannel):
 
     def gestionEvennement(self):
         """
+
         gestionEvennement est le corps de la gestion des messages en ciruclation mais tout particulierement la gestion
             des acquittements des messages securise. Cette methode gere aussi le fait si on communique via UDP ou via
             le canal.
@@ -211,6 +215,7 @@ class snakePost(snakeChannel):
 
     def initialisation(self, canal):
         """
+
         Methode qui initialise chaque dictionnaire pour un canal donne
 
         :param canal: contient le canal de communication
