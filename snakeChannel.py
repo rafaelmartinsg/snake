@@ -19,14 +19,16 @@ from constants import *
 
 
 class snakeChannel(object):
-    '''                            __init__
-        Parametres :   - canal      : continent le canal de communication
-                       - ip         : contient l'adresse ip du serveur
-                       - port       : contient le port du serveur
-                       - couleur    : contient la couleur du joueur
-                       - nickname   : correspond au nom du joueur
-    '''
     def __init__(self, canal, ip, port, couleur, nickname):
+        """
+
+        :param canal: continent le canal de communication
+        :param ip: contient l'adresse ip du serveur
+        :param port: contient le port du serveur
+        :param couleur: contient la couleur du joueur
+        :param nickname:
+        :return: correspond au nom du joueur
+        """
         self.canal = canal
         self.addIP = ip
         self.nPort = port
@@ -39,7 +41,9 @@ class snakeChannel(object):
         self.connexions = {}
         self.connexionsNonEtablies = {}
 
-    '''                         clientConnexion
+    def clientConnexion(self):
+        """
+
         Methode qui permettra au client de se connecter au serveur
         Cette methode suit une machine d'etat definie par le cahier des charges de la maniere suivante :
             TX  :   0xFFFFFFFF (numero de sequence pour initier la connexion)
@@ -47,8 +51,10 @@ class snakeChannel(object):
             RX  :   Token B A ProtocoleNumber
             TX  :   Connect /nom_cles/valeur_cles/.../...
             RX  :   Connected B
-    '''
-    def clientConnexion(self):
+
+        :return True: client connecte au serveur
+        :return False: probleme pendant la phase de connexion
+        """
         etat = 0
         A = random.randint(0, (1 << 32) - 1)
         B = 0
@@ -96,7 +102,9 @@ class snakeChannel(object):
                 print "Une erreur est survenue pendant la connexion du client."
                 return False
 
-    '''                         receptionSnakeChann
+    def receptionSnakeChann(self):
+        """
+
         Methode qui receptionne les donnees et on les traite en fonction du n° de sequence.
             On taites les cas suivants :
                 - Donnes recues valides --> on les traite. Sinon, on retourne None, None
@@ -105,8 +113,9 @@ class snakeChannel(object):
                 - Si n°sequence != 0xFFFFFFFF et que l'on a pas depasse la valeur maximale :
                     On stock le numero de sequence du client dans le dictionnaire
                     On retourne le payload des donnees
-    '''
-    def receptionSnakeChann(self):
+        :return None, None: erreur dans les donnes ou sur le canal
+        :return payload, canal: renvoi des donnees a transmettre sur le canal
+        """
         try:
             donnees, host = self.canal.recvfrom(BUFFER_SIZE)
         except socket.error:
@@ -150,16 +159,18 @@ class snakeChannel(object):
 
         self.canal.sendto(pack, host)
 
-    '''                         serveurConnexion
-       Methode qui s'occupe de la phase de connexion entre un client et un serveur
+    def serveurConnexion(self):
+        """
+        Methode qui s'occupe de la phase de connexion entre un client et un serveur
        Les messages sont definit par le cahier des charges, de la manière suivante :
            RX  :   0xFFFFFFFF (numero de sequence OUTBAND pour initier la connexion)
            RX  :   GetToken A Snake
            TX  :   Token B A ProtocoleNumber
            RX  :   Connect /nom_cles/valeur_cles/.../...
            TX  :   Connected B
-    '''
-    def serveurConnexion(self):
+
+        :return:
+        """
         #print 'Serveur ecoute sur le port : ', self.nPort, '...'
         #print "En attente de clients ..."
         try:
