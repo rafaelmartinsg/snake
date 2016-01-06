@@ -39,8 +39,8 @@ class Serveur(snakePost):
 
         self.clients = {}
         self.listfood = []
-
-        #self.listPlayersInfo = []
+        #pourquoi c'etait commenté
+        self.listPlayersInfo = []
         #self.snakesDico = {}
         print 'Serveur ecoute sur le port : ', self.nPort, '...'
 
@@ -79,8 +79,9 @@ class Serveur(snakePost):
         if(self.listFood[0] == None):
             print "liste des pommes vides"
         else:
-            send = '{"foods": '
-            send += json.dumps(self.listFood) + '}'
+            #send = '{"foods": '
+            #send += json.dumps(self.listFood) + '}'
+            send = json.dumps({'food':self.listFood})
         #Envoie securisé a tout les clients la liste des pommes
         self.broadcast(send,True)
 
@@ -120,22 +121,25 @@ class Serveur(snakePost):
         if(self.listPlayersInfo[0] == None):
             print "liste des info player vide"
         else:
-            send = '{"players_info": "'
-            send += json.dumps(self.listPlayersInfo) + '"}'
+            send = json.dumps({'players_info':self.listPlayersInfo})
+            #send = '{"players_info": "'
+            #send += json.dumps(self.listPlayersInfo) + '"}'
         # envoie fiable
         pass
 
     # Contient le nom du joueur qui a perdu et qui doit recommencer depuis le debut
     def msgGame_over(self,nomJoueur):
         # formatage JSON
-        send = '{"game_over":"'+ nomJoueur+'"}'
+        send = json.dumps({'game_over':nomJoueur})
+        #send = '{"game_over":"'+ nomJoueur+'"}'
         # envoie fiable
         self.broadcast(send,True)
 
     # previens un joueur qu'il est rentrer dans une pomme
     def msgGrow(self,nomJoueur):
         # formatage JSON
-        send = '{"grow":"'+ nomJoueur+'"}'
+        send = json.dumps({'grow':nomJoueur})
+        #send = '{"grow":"'+ nomJoueur+'"}'
         # envoie fiable
         self.broadcast(send,True)
 
