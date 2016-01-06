@@ -163,8 +163,14 @@ class Client(snakePost):
 
             # then update display, update game area on screen container
             self.screen.blit(self.gamescreen, (self.score_width, 0))
-
+            print(self.me.body)
             pygame.display.update()
+
+            data, host = self.receptionSnakeChann()
+            if data is not None:
+                print(data[4:])
+                donneeJson = json.loads(data[4:])
+                print(donneeJson)
 
     # Methode qui envoie la liste qui contient les coordonnées du corp d'un serpent
     # envoie non securisé. listBody => contient les positions des différentes parties du corps

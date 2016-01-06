@@ -69,7 +69,7 @@ class snakePost(snakeChannel):
                     if self.udp:  # on udp
                         self.channel.sendto(self.messagesSecures[canal][0][0], canal)
                     else:  # on snake_channel
-                        self.send_channel(self.messagesSecures[canal][0][0], canal)
+                        self.envoiSnakeChann(self.messagesSecures[canal][0][0], canal)
 
             if len(donnees[4:]) == 0:
                 return None
