@@ -12,19 +12,20 @@
 #
 #   Nom fichier     :   snakeChannel.py
 # ##############################################################################
-import socket  # Import socket module
+import socket
 import random
 import struct
 from constants import *
 
-C_SEQNUM = 0    # Numero de sequence
-C_STATUS = 1    # Statut du client (connectee / deconnecte)
-C_LASTP = 2     # Dernier ping
-C_COULEUR = 3   # Couleur du joueur
-C_NICKNAME = 4  # Nickname du joueur
-
 
 class snakeChannel(object):
+    '''                            __init__
+        Parametres :   - canal      : continent le canal de communication
+                       - ip         : contient l'adresse ip du serveur
+                       - port       : contient le port du serveur
+                       - couleur    : contient la couleur du joueur
+                       - nickname   : correspond au nom du joueur
+    '''
     def __init__(self, canal, ip, port, couleur, nickname):
         self.canal = canal
         self.addIP = ip
@@ -38,19 +39,26 @@ class snakeChannel(object):
         self.connexions = {}
         self.connexionsNonEtablies = {}
 
+    '''                         clientConnexion
+        Methode qui permettra au client de se connecter au serveur
+        Cette methode suit une machine d'etat definie par le cahier des charges de la maniere suivante :
+            TX  :   0xFFFFFFFF (numero de sequence pour initier la connexion)
+            TX  :   GetToken A Snake (envoi a interval regulier tant que le serveur ne repond pas)
+            RX  :   Token B A ProtocoleNumber
+            TX  :   Connect /nom_cles/valeur_cles/.../...
+            RX  :   Connected B
+    '''
     def clientConnexion(self):
         etat = 0
         A = random.randint(0, (1 << 32) - 1)
         B = 0
-        # couleur = pygame.color.THECOLORS
-        while (etat < 3):
-            # Si etat 0
+
+        while etat < 3:
             if etat == 0:
                 self.envoiSnakeChann("GetToken " + str(A) + " Snake", (self.addIP, self.nPort),
                                      SEQUENCE_OUTBAND)
                 print "Client envoi : GetToken", A, "Snake"
                 etat += 1
-            # Si etat 1
             elif etat == 1:
                 controlToken, client = self.receptionSnakeChann()
                 print "Client recoit : ", controlToken
@@ -88,20 +96,21 @@ class snakeChannel(object):
                 print "Une erreur est survenue pendant la connexion du client."
                 return False
 
+    '''                         receptionSnakeChann
+        Methode qui receptionne les donnees et on les traite en fonction du n° de sequence.
+            On taites les cas suivants :
+                - Donnes recues valides --> on les traite. Sinon, on retourne None, None
+                - Si n°sequence = 0xFFFFFFFF et que c'est la premiere connexion du client :
+                    On cree une entree pour ce client dans le dictionnaire du serveur.
+                - Si n°sequence != 0xFFFFFFFF et que l'on a pas depasse la valeur maximale :
+                    On stock le numero de sequence du client dans le dictionnaire
+                    On retourne le payload des donnees
+    '''
     def receptionSnakeChann(self):
-        """Receive data with sequence number
-
-        Verification of sequence message.
-        If this is the first time we manage this connection, we add his sequence number
-        as 0xffffffff for the connection phase (out of band messages).
-        :return:
-        """
         try:
             donnees, host = self.canal.recvfrom(BUFFER_SIZE)
-            # print data
         except socket.error:
             return None, None
-
         try:
             numSquence = struct.unpack('>I', donnees[:4])[0]
             payload = donnees[4:]
@@ -116,38 +125,43 @@ class snakeChannel(object):
                 self.connexions[host][C_SEQNUM] = numSquence
                 return payload, host
             return None, None
-
         except:
-            # If we receive garbage, return None
             return None, None
 
-    #   envoi
-    #
-    #   Parametres  :   - donnees   : continent les donnes a envoyer
-    #                   - client    : tuple avec adresse IP et n°port
-    #                   - sequence  : utile uniquement pour l'envoi de sequence hors bande
-    #
+    '''                            envoiSnakeChann
+        Parametres :   - donnees   : continent les donnes a envoyer
+                       - host      : tuple avec adresse IP et n°port
+                       - sequence  : contient le numero de sequence
+    '''
     def envoiSnakeChann(self, donnees, host, sequence):
         if self.connexionsNonEtablies.get(host) is None:
             self.connexionsNonEtablies[host] = SEQUENCE_OUTBAND
 
-        if sequence is None:  # Incrementation of sequence number (modulo)
+        if sequence is None:
+            # Incrementation du numero de sequence par modulo
             self.connexionsNonEtablies[host] = (self.connexionsNonEtablies[host] + 1) % (0x1 << 32)
-        else:  # Sequence number is 0xFFFFFFFF -> connection packet
+        else:
+            # Si n°sequence = 0xFFFFFFFF -> phase de connexion
             self.connexionsNonEtablies[host] = sequence
 
-        # Pack the sequence number
+        # Pack le numero de sequence
         pack = struct.pack('>I', self.connexionsNonEtablies[host])
-        # Concatenation of data
         pack += donnees
 
-        # Send the message
-        # print str(pack)
         self.canal.sendto(pack, host)
 
+    '''                         serveurConnexion
+       Methode qui s'occupe de la phase de connexion entre un client et un serveur
+       Les messages sont definit par le cahier des charges, de la manière suivante :
+           RX  :   0xFFFFFFFF (numero de sequence OUTBAND pour initier la connexion)
+           RX  :   GetToken A Snake
+           TX  :   Token B A ProtocoleNumber
+           RX  :   Connect /nom_cles/valeur_cles/.../...
+           TX  :   Connected B
+    '''
     def serveurConnexion(self):
-        print 'Serveur ecoute sur le port : ', self.nPort, '...'
-        print "En attente de clients ..."
+        #print 'Serveur ecoute sur le port : ', self.nPort, '...'
+        #print "En attente de clients ..."
         try:
             donnees, client = self.receptionSnakeChann()
 
@@ -177,7 +191,7 @@ class snakeChannel(object):
 
                     # Control de la valeur de B
                     if (len(separateur) < 3) or (int(self.A) != int(separateur[2])):
-                        print "Suivant...!"
+                        print "Suivant... !"
                         return None, None
 
                     self.envoiSnakeChann("Connected " + str(self.A), client, SEQUENCE_OUTBAND)

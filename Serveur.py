@@ -12,10 +12,6 @@
 #
 #   Nom fichier     :   Serveur.py
 # ##############################################################################
-import sys
-
-import pygame
-import random
 import json
 
 from constants import *
@@ -27,7 +23,7 @@ from joueurs import *
 
 class Serveur(snakePost):
     def __init__(self):
-        super(Serveur, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM), UDP_ADD_IP, UDP_NUM_PORT)
+        super(Serveur, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM), UDP_ADD_IP, UDP_NUM_PORT, False)
         pygame.init()
         self.clock = pygame.time.Clock()
         self.current_time = 0
@@ -44,25 +40,10 @@ class Serveur(snakePost):
         #self.snakesDico = {}
         print 'Serveur ecoute sur le port : ', self.nPort, '...'
 
-
-    #
-    #   gestionMessage est la methode qui s'occupe des messages recus et ceux que le serveur doit envoyer
-    #   Les messages sont definit par le cahier des charges selon la manière suivante :
-    #       RX  :   0xffffffff (numero de sequence pour initier la connexion)
-    #       RX  :   GetToken A Snake
-    #       TX  :   Token B A ProtocoleNumber
-    #       RX  :   Connect /nom_cles/valeur_cles/.../...
-    #       TX  :   Connected B
-    #
-    # def gestionMessages(self):
-    #     while(True):
-    #         self.serveurConnexion()
-
     def run(self):
-        while (True):
+        while True:
             # check si des messages sont a envoyer
-            # self.gestionMessages()
-            self.process_buffer()
+            self.gestionEvennement()
             # Ecoute d'eventuels messages
             donnees, canal = self.ecouteServeur()
 
@@ -70,8 +51,6 @@ class Serveur(snakePost):
                 if not self.clients.get(canal):
                     self.clients[canal] = Joueurs(self.connexions[canal][C_NICKNAME], self.connexions[canal][C_COULEUR],
                                                   0, False, [])
-            # else:
-                # return None, None
 
     # Methode pour les messages food, listFood => liste avec toute les coordonnées des pommes
     def msgFood(self):
@@ -84,13 +63,13 @@ class Serveur(snakePost):
         #Envoie securisé a tout les clients la liste des pommes
         self.broadcast(send,True)
 
-    def broadcast(self,data,secure):
+    def broadcast(self, data, secure):
         if secure:
             for i in self.clients:
-                snakePost.envoiSecure(self,self.sServeur,data,i)
+                snakePost.envoiSecure(self, self.sServeur, data, i)
         elif not secure:
             for i in self.clients:
-                snakePost.envoiNonSecure(self,self.sServeur,data,i)
+                snakePost.envoiNonSecure(self, self.sServeur, data, i)
 
     #  envoie la liste des positions du corps de tout les snakes dans la partie, préfixées par l'identifiant
     # du joueur. snakesDico => dicitonnaire nom du joueur, position
@@ -111,7 +90,7 @@ class Serveur(snakePost):
             send += ']}'
 
         # envoie non fiable
-        self.broadcast(send,False)
+        self.broadcast(send, False)
 
     # msg contenant toute les infos des joueurs: nom du joueur, sa couleur, son score, ready ou pas
     # listPlayersInfo => liste contenant toute les infos
@@ -126,21 +105,19 @@ class Serveur(snakePost):
         pass
 
     # Contient le nom du joueur qui a perdu et qui doit recommencer depuis le debut
-    def msgGame_over(self,nomJoueur):
+    def msgGame_over(self, nomJoueur):
         # formatage JSON
-        send = '{"game_over":"'+ nomJoueur+'"}'
+        send = '{"game_over":"' + nomJoueur + '"}'
         # envoie fiable
-        self.broadcast(send,True)
+        self.broadcast(send, True)
 
     # previens un joueur qu'il est rentrer dans une pomme
-    def msgGrow(self,nomJoueur):
+    def msgGrow(self, nomJoueur):
         # formatage JSON
-        send = '{"grow":"'+ nomJoueur+'"}'
+        send = '{"grow":"' + nomJoueur + '"}'
         # envoie fiable
-        self.broadcast(send,True)
+        self.broadcast(send, True)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     Serveur().run()
-    #serv = Serveur()
-    #serv.gestionMessages()

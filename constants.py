@@ -7,6 +7,12 @@
 import os
 
 # Constantes
+
+C_SEQNUM = 0    # Numero de sequence
+C_STATUS = 1    # Statut du client (connectee / deconnecte)
+C_LASTP = 2     # Dernier ping
+C_COULEUR = 3   # Couleur du joueur
+C_NICKNAME = 4  # Nickname du joueur
 MAX_CLIENT = 10
 
 #UDP_ADD_IP = "129.194.186.177"
@@ -15,7 +21,7 @@ MAX_CLIENT = 10
 UDP_ADD_IP = "127.0.0.1"
 UDP_NUM_PORT = 6667
 BUFFER_SIZE = 4096
-PNUM = 19 # meme valeur que dans enonce
+PNUM = 19
 SEQUENCE_OUTBAND = 0xFFFFFFFF
 
 LIST_SIZE_MAX = 64
@@ -23,8 +29,6 @@ LIST_SIZE_MAX = 64
 MAX_ATTENTE_JOUEUR = 2
 
 class Constants:
-    """ All of the in-game constants are declared here."""
-
     # GAME NAME
     CAPTION = "Yet Another Python Snake - Single-player"
     UNITS = 40

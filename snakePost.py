@@ -22,20 +22,28 @@ from snakeChannel import snakeChannel
 
 # Constantes
 MESSAGE_SECURE = USEREVENT + 1
-FPS = 60
 
 
 class snakePost(snakeChannel):
-    def __init__(self, channel, ip, port, color='', nickname='', udp=False):
-        # Appelle le constructeur de la classe qu'on hérite
-        super(snakePost, self).__init__(channel, ip, port, color, nickname)
+    def __init__(self, canal, ip, port, couleur='', nickname='', udp=False):
+        """
 
-        self.messagesSecures = {} # Contient tous les messages secures a envoyer pour chaque client
-        self.messagesNormaux = {} # Contient tous les messages normaux a envoyer pour chaque client
-        self.last_ack = {}  # Contient la valeur du dernier ack recu par les clients
-        self.seq = {}  # Contient le dernier numero de sequence du client
-        self.ackRecus = {} # Permet d'avoir un ensemble des ack recus afin de pouvoir traites les messages secures
-        self.attenteSecureReseau = {} # Permet de savoir si un client a un message secure sur le reseau
+        :param canal: continent les donnes a envoyer
+        :param ip: contient l'adresse ip du serveur
+        :param port: contient le port du serveur
+        :param couleur: contient la couleur du joueur
+        :param nickname: correspond au nom du joueur
+        :param udp: indique si l'on veut communiquer par UDP (avec socket)
+        :return:
+        """
+        super(snakePost, self).__init__(canal, ip, port, couleur, nickname)
+
+        self.messagesSecures = {}   # Contient tous les messages secures a envoyer pour chaque client
+        self.messagesNormaux = {}   # Contient tous les messages normaux a envoyer pour chaque client
+        self.dernierAck = {}  # Contient la valeur du dernier ack recu par les clients
+        self.derniereSeq = {}   # Contient le dernier numero de sequence du client
+        self.ackRecus = {}  # Permet d'avoir un ensemble des ack recus afin de pouvoir traites les messages secures
+        self.attenteSecureReseau = {}   # Permet de savoir si un client a un message secure sur le reseau
 
         pygame.init()
         pygame.time.set_timer(MESSAGE_SECURE, 30)
@@ -43,6 +51,17 @@ class snakePost(snakeChannel):
         self.commUDP = udp
 
     def gestionMessages(self, donnees, canal):
+        """
+        Methode permettant de traiter les messages en circulation dans le canal. Elle gere le cas du message secure ou
+            du message normal a envoyer. Lorsqu'un message secure est a envoyer, les ack de celui-ci sont egalement
+            geres. A la reception du message, on separe le numero de sequence et la valeur du ack afin de savoir quel
+            type de message nous traitons.
+
+        :param donnees: contient les donness a traiter
+        :param canal: continent les donnes a envoyer
+        :return None: dans le cas ou les donnees sont incorrectes
+        :return payload: dans le cas d'un message a envoyer
+        """
         # Si on recoit des donnees
         if donnees is not None and len(donnees) >= 4:
             seq = struct.unpack('>H', donnees[:2])[0]
@@ -56,11 +75,11 @@ class snakePost(snakeChannel):
 
             # Lorsque l'on recoit un ack
             if ack != 0 and len(self.last_seq[canal]) > 0:
-                # Compare the ack with the last seq
-                if ack == self.last_seq[canal][0]:
-                    # If the ack is correct, remove the secure message from the list
+                # On le compare avec la valeur de la derniere sequence
+                if ack == self.derniereSeq[canal][0]:
+                    # Si le ack correspond, on enleve le message de la liste
                     self.messagesSecures[canal].pop(0)
-                    self.last_seq[canal].pop(0)
+                    self.derniereSeq[canal].pop(0)
                     self.attenteSecureReseau[canal] = False
                     self.ackRecus[canal] = True
                     if seq != 0:
@@ -74,10 +93,23 @@ class snakePost(snakeChannel):
             if len(donnees[4:]) == 0:
                 return None
             else:
-                return donnees[4:]  # Return the payload
+                # On retourne le payload
+                return donnees[4:]
         else:
             return None
-        
+
+    '''                                        ecouteServeur
+        Methode qui met le serveur en ecoute de nouveaux messages. via la fonction "serveurConnexion" (snakeChannel)
+
+        Lors de la reception d'un nouveau message, on fait appel a la fonction "gestionMessages" afin de traiter le
+            nouveau contenu recu.
+
+        A la reception du message, on separe le numero de sequence et la valeur du ack afin de savoir quel
+            type de message nous traitons.
+
+        Valeurs de retour : - None, None        : dans le cas ou les donnees ou le canal sont incorrects
+                            - payload, canal    : donnes a envoyer et sur quel canal on communique
+    '''
     def ecouteServeur(self):
         donnees, canal = self.serveurConnexion()
         if donnees is not None and canal is not None:
@@ -85,8 +117,25 @@ class snakePost(snakeChannel):
             return payload, canal
         else:
             return None, None
-    
+
     def envoiSnakePost(self, donnees, canal, secure=False):
+        """
+        Methode qui permet l'envoi des messages. Les messages dit "normaux" sont stockes dans un dictionnaire. Les
+            messages dit "securises" sont aussi stockes dans un dictionnaire ayant une taille fixee. Si le dictionnaire
+            des messages securises est plein, un message d'avertissement est envoye au joueur. Avant toute chose, on
+            initialise chaque dictionnaire.
+
+        Lors de la reception d'un nouveau message, on fait appel a la fonction "gestionMessages" afin de traiter le
+            nouveau contenu recu.
+
+        A la reception du message, on separe le numero de sequence et la valeur du ack afin de savoir quel
+            type de message nous traitons.
+
+        :param donnees: contient les donness a traiter
+        :param canal: continent les donnes a envoyer
+        :param secure: indique le type de message
+        :return:
+        """
         self.inistialisation(canal)
         if not secure:
             self.messagesNormaux[canal].append((struct.pack('>2H', 0, 0) + donnees, canal))
@@ -113,49 +162,31 @@ class snakePost(snakeChannel):
                 return None
         return payload
 
-    def gestionEvennement(self, s):
-        #s =True
-        continuer = True
-        while(continuer):
-            for event in pygame.event.get():
-                if event.type == MESSAGE_SECURE:
-                    # on check dans le dico client si un message secure est a envoyer
-                    for key in self.messagesSecures:
-                        donnees, seq = self.messagesSecures[key].get(0)
-                        self.envoiNonSecure(s, donnees, key)
-                    break
-            # Si pas d'evenement, on reste en attente de nouveaux messagess
-                self.receptionPost(key, seq, seq, donnees)
-            # snakeChannel.reception(s)
-
-    def process_buffer(self):
-        """Check buffer from each canal and send a message
-
-        Secure message have the highest priority
-
-        If the timer for the ack is expired, we resend the previous secure message
-        The last secure message is not pop yet, we wait for the ack
+    def gestionEvennement(self):
+        """
 
         :return:
         """
-        self.current_time += self.clock.tick(FPS)
+        self.current_time += self.clock.tick(Constants.FPS)
+        # On parcoure le dictionnaire de connexions
         for canal in self.connexions:
             if self.attenteSecureReseau.get(canal) and self.attenteSecureReseau[canal] and not self.ackRecus[canal] \
                     and self.ack_timer.expired(self.current_time):
                 # RE-send SECURE
                 # If we didn't received ack for secure message, resend the message
-                data = self.messagesSecures[canal][0][0]
+                donnees = self.messagesSecures[canal][0][0]
 
-                if self.udp:  # on udp
-                    self.channel.sendto(data, canal)
+                if self.commUDP:  # on udp
+                    self.channel.sendto(donnees, canal)
                 else:  # on snake_channel
-                    self.send_channel(data, canal)
+                    self.send_channel(donnees, canal)
 
-            elif self.messagesSecures.get(canal) and self.messagesSecures[canal] and not self.attenteSecureReseau[canal]:
+            elif self.messagesSecures.get(canal) and self.messagesSecures[canal] \
+                    and not self.attenteSecureReseau[canal]:
                 # Send SECURE
                 # Get the first secure packet to send
                 # We don't pop it because we will wait for the ack
-                data = self.messagesSecures[canal][0][0]
+                donnees = self.messagesSecures[canal][0][0]
                 if not self.attenteSecureReseau[canal]:
                     # We are sending a secure message, we need to receive a ack and
                     # we can't have two secure message at the same time on the same channel
@@ -163,10 +194,10 @@ class snakePost(snakeChannel):
                     self.attenteSecureReseau[canal] = True
 
                     if self.udp:  # on udp
-                        self.channel.sendto(data, canal)
+                        self.canal.sendto(donnees, canal)
                     else:  # on snake_channel
-                        self.send_channel(data, canal)
-                        print data
+                        self.send_channel(donnees, canal)
+                        print donnees
 
                     # Activate the timer in order to resend the message if it expires
                     self.ack_timer.activate(0)
@@ -174,23 +205,29 @@ class snakePost(snakeChannel):
                 # Send NORMAL
                 if self.messagesNormaux.get(canal) and \
                         self.messagesNormaux[canal]:
-                    data = self.messagesNormaux[canal].pop(0)[0]
+                    donnees = self.messagesNormaux[canal].pop(0)[0]
 
-                    if self.udp:  # on udp
-                        self.channel.sendto(data, canal)
+                    if self.commUDP:  # on udp
+                        self.canal.sendto(donnees, canal)
                     else:  # on snake_channel
-                        self.send_channel(data, canal)
-                        # print data
+                        self.send_channel(donnees, canal)
+                        # print donnees
 
     def initialisation(self, canal):
+        """
+        Methode qui initialise chaque dictionnaire pour un canal donne
+
+        :param canal: contient le canal de communication
+        :return:
+        """
         if not self.messagesNormaux.get(canal):
             self.messagesNormaux[canal] = []
         if not self.messagesSecures.get(canal):
             self.messagesSecures[canal] = []
-        if not self.last_ack.get(canal):
-            self.last_ack[canal] = None
-        if not self.last_seq.get(canal):
-            self.last_seq[canal] = []
+        if not self.dernierAck.get(canal):
+            self.dernierAck[canal] = None
+        if not self.derniereSeq.get(canal):
+            self.derniereSeq[canal] = []
         if not self.ackRecus.get(canal):
             self.ackRecus[canal] = None
         if not self.attenteSecureReseau.get(canal):
