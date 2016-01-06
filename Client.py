@@ -112,6 +112,7 @@ class Client(snakePost):
                 if event.key == pygame.K_RIGHT:
                     self.me.action(4)
                 if event.key == pygame.K_SPACE:
+                    self.msgReady()
                     self.me.set_ready()
 
     def run(self):
@@ -162,8 +163,14 @@ class Client(snakePost):
 
             # then update display, update game area on screen container
             self.screen.blit(self.gamescreen, (self.score_width, 0))
-
+            print(self.me.body)
             pygame.display.update()
+
+            data, host = self.receptionSnakeChann()
+            if data is not None:
+                print(data[4:])
+                donneeJson = json.loads(data[4:])
+                print(donneeJson)
 
     # Methode qui envoie la liste qui contient les coordonnées du corp d'un serpent
     # envoie non securisé. listBody => contient les positions des différentes parties du corps
@@ -172,17 +179,18 @@ class Client(snakePost):
         if self.listBody[0] == None:
             print "liste des corps vides"
         else:
-            send = '{"body_p": '
-            send += json.dumps(self.listBody) + '}'
+            send = json.dumps({'body_p':self.listBody})
         # envoie non sécurisé, a verif
         self.envoiNonSecure(self.sClient, send, (self.addIP, self.nPort))
         pass
     # methode qui envoie un message qui dit au serveur si on est ready ou pas
     def msgReady(self):
         # formatage des données en JSON
-        send = '{"ready":"'+True+'"}'
+        #send = '{"ready":"'+True+'"}'
+        msg = {'ready':True}
+        send = json.dumps(msg)
         # envoie fiable
-        self.envoiSecure(self.sClient, send, (self.addIP, self.nPort))
+        self.envoiSnakePost(send,self.canal,True)
         pass
 
 if __name__ == "__main__":

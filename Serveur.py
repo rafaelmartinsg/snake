@@ -36,9 +36,23 @@ class Serveur(snakePost):
         self.clients = {}
         self.listfood = []
 
-        #self.listPlayersInfo = []
+        self.listPlayersInfo = []
         #self.snakesDico = {}
         print 'Serveur ecoute sur le port : ', self.nPort, '...'
+
+
+    #
+    #   gestionMessage est la methode qui s'occupe des messages recus et ceux que le serveur doit envoyer
+    #   Les messages sont definit par le cahier des charges selon la manière suivante :
+    #       RX  :   0xffffffff (numero de sequence pour initier la connexion)
+    #       RX  :   GetToken A Snake
+    #       TX  :   Token B A ProtocoleNumber
+    #       RX  :   Connect /nom_cles/valeur_cles/.../...
+    #       TX  :   Connected B
+    #
+    # def gestionMessages(self):
+    #     while(True):
+    #         self.serveurConnexion()
 
     def run(self):
         while True:
@@ -58,8 +72,9 @@ class Serveur(snakePost):
         if(self.listFood[0] == None):
             print "liste des pommes vides"
         else:
-            send = '{"foods": '
-            send += json.dumps(self.listFood) + '}'
+            #send = '{"foods": '
+            #send += json.dumps(self.listFood) + '}'
+            send = json.dumps({'food':self.listFood})
         #Envoie securisé a tout les clients la liste des pommes
         self.broadcast(send,True)
 
@@ -99,22 +114,25 @@ class Serveur(snakePost):
         if(self.listPlayersInfo[0] == None):
             print "liste des info player vide"
         else:
-            send = '{"players_info": "'
-            send += json.dumps(self.listPlayersInfo) + '"}'
+            send = json.dumps({'players_info':self.listPlayersInfo})
+            #send = '{"players_info": "'
+            #send += json.dumps(self.listPlayersInfo) + '"}'
         # envoie fiable
         pass
 
     # Contient le nom du joueur qui a perdu et qui doit recommencer depuis le debut
     def msgGame_over(self, nomJoueur):
         # formatage JSON
-        send = '{"game_over":"' + nomJoueur + '"}'
+        send = json.dumps({'game_over':nomJoueur})
+        #send = '{"game_over":"'+ nomJoueur+'"}'
         # envoie fiable
         self.broadcast(send, True)
 
     # previens un joueur qu'il est rentrer dans une pomme
     def msgGrow(self, nomJoueur):
         # formatage JSON
-        send = '{"grow":"' + nomJoueur + '"}'
+        send = json.dumps({'grow':nomJoueur})
+        #send = '{"grow":"'+ nomJoueur+'"}'
         # envoie fiable
         self.broadcast(send, True)
 
