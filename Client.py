@@ -88,15 +88,6 @@ class Client(snakePost):
         self.blink_banner_timer = Timer(500, self.current_time, periodic=True)
         self.new_apple_timer = Timer(Constants.NEW_APPLE_PERIOD*1000, self.current_time, periodic=True)
 
-    #
-    #   connexion est la methode qui permettra au client de se connecter au serveur
-    #   Cette methode suit une machine d'etat definie par le cahier des charges de la maniere suivante :
-    #       TX  :   0xffffffff (numero de sequence pour initier la connexion)
-    #       TX  :   GetToken A Snake (envoi a interval regulier tant que le serveur ne repond pas)
-    #       RX  :   Token B A ProtocoleNumber
-    #       TX  :   Connect /nom_cles/valeur_cles/.../...
-    #       RX  :   Connected B
-
     def process_events(self):
         # key handling
         for event in pygame.event.get():

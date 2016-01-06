@@ -40,20 +40,6 @@ class Serveur(snakePost):
         #self.snakesDico = {}
         print 'Serveur ecoute sur le port : ', self.nPort, '...'
 
-
-    #
-    #   gestionMessage est la methode qui s'occupe des messages recus et ceux que le serveur doit envoyer
-    #   Les messages sont definit par le cahier des charges selon la manière suivante :
-    #       RX  :   0xffffffff (numero de sequence pour initier la connexion)
-    #       RX  :   GetToken A Snake
-    #       TX  :   Token B A ProtocoleNumber
-    #       RX  :   Connect /nom_cles/valeur_cles/.../...
-    #       TX  :   Connected B
-    #
-    # def gestionMessages(self):
-    #     while(True):
-    #         self.serveurConnexion()
-
     def run(self):
         while True:
             # check si des messages sont a envoyer
@@ -135,7 +121,6 @@ class Serveur(snakePost):
         #send = '{"grow":"'+ nomJoueur+'"}'
         # envoie fiable
         self.broadcast(send, True)
-
 
 if __name__ == "__main__":
     Serveur().run()
