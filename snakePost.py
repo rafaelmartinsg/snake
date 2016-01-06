@@ -139,16 +139,16 @@ class snakePost(snakeChannel):
         :param secure: indique le type de message
         :return:
         """
-        self.inistialisation(canal)
+        self.initialisation(canal)
         if not secure:
             self.messagesNormaux[canal].append((struct.pack('>2H', 0, 0) + donnees, canal))
             # print "[send] Not secure : donnees = ", donnees, " - to : ", canal
         else:
             if len(self.messagesSecures[canal]) < MAX_CLIENT:
-                self.last_seq[canal].append(random.randint(1, (1 << 16) - 1))
+                self.derniereSeq[canal].append(random.randint(1, (1 << 16) - 1))
                 self.messagesSecures[canal].append(
-                    (struct.pack('>2H', self.last_seq[canal][-1], 0) + donnees, canal))
-                print "SEQ_NUMBER : " + str(self.last_seq[canal][-1]) + " - ACK_NUMBER " + str(0)
+                    (struct.pack('>2H', self.derniereSeq[canal][-1], 0) + donnees, canal))
+                print "NUM_SEQ : " + str(self.derniereSeq[canal][-1]) + " - ACK " + str(0)
             else:
                 print "Buffer est plein, ..."
 
