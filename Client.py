@@ -157,10 +157,10 @@ class Client(snakePost):
             print(self.me.body)
             pygame.display.update()
 
-            data, host = self.receptionSnakeChann()
+            data, host = self.ecouteClient()
             if data is not None:
-                print(data[4:])
-                donneeJson = json.loads(data[4:])
+                print(data)
+                donneeJson = json.loads(data)
                 print(donneeJson)
 
     # Methode qui envoie la liste qui contient les coordonnées du corp d'un serpent

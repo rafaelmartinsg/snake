@@ -12,10 +12,14 @@
 #
 #   Nom fichier     :   snakePost.py
 # ##############################################################################
+import sys
+
 import random
 import pygame
 import struct
 
+
+from timer import *
 from constants import *
 from pygame.locals import *
 from snakeChannel import snakeChannel
@@ -48,7 +52,8 @@ class snakePost(snakeChannel):
         pygame.init()
         pygame.time.set_timer(MESSAGE_SECURE, 30)
         self.numSeq = 0
-        self.commUDP = udp
+        self.horloge = pygame.time.Clock()
+        self.tempsActuel = 0
 
     def gestionMessages(self, donnees, canal):
         """
@@ -75,7 +80,7 @@ class snakePost(snakeChannel):
                 self.ack(seq, canal)
 
             # Lorsque l'on recoit un ack
-            if ack != 0 and len(self.last_seq[canal]) > 0:
+            if ack != 0 and len(self.derniereSeq[canal]) > 0:
                 # On le compare avec la valeur de la derniere sequence
                 if ack == self.derniereSeq[canal][0]:
                     # Si le ack correspond, on enleve le message de la liste
@@ -86,10 +91,7 @@ class snakePost(snakeChannel):
                     if seq != 0:
                         self.ack(seq, canal)
                 else:
-                    if self.udp:
-                        self.channel.sendto(self.messagesSecures[canal][0][0], canal)
-                    else:
-                        self.envoiSnakeChann(self.messagesSecures[canal][0][0], canal)
+                    self.envoiSnakeChann(self.messagesSecures[canal][0][0], canal)
 
             if len(donnees[4:]) == 0:
                 return None
@@ -152,9 +154,6 @@ class snakePost(snakeChannel):
             else:
                 print "Buffer est plein, ..."
 
-    def envoiNonSecure(self, s, donnees, host):
-        self.envoi(s, donnees, host, 0)
-
     def receptionPost(self, host, seq, ack, payload):
         if ack != 0:
             # Si message secure recu et que ack+payload identique a dans liste
@@ -165,6 +164,28 @@ class snakePost(snakeChannel):
                 return None
         return payload
 
+    def ecouteClient(self):
+        """
+
+        Methode qui met le serveur en ecoute de nouveaux messages. via la fonction "serveurConnexion" (snakeChannel)
+
+        Lors de la reception d'un nouveau message, on fait appel a la fonction "gestionMessages" afin de traiter le
+            nouveau contenu recu.
+
+        A la reception du message, on separe le numero de sequence et la valeur du ack afin de savoir quel
+            type de message nous traitons.
+
+        :return None, None: dans le cas ou les donnees ou le canal sont incorrects
+        :return payload, canal: donnes a envoyer et sur quel canal on communique
+        """
+        #donnees, canal = self.serveurConnexion()
+        donnees, canal = self.receptionSnakeChann()
+        if donnees is not None and canal is not None:
+            payload = self.gestionMessages(donnees, canal)
+            return payload, canal
+        else:
+            return None, None
+
     def gestionEvennement(self):
         """
 
@@ -174,18 +195,14 @@ class snakePost(snakeChannel):
 
         :return:
         """
-        self.current_time += self.clock.tick(Constants.FPS)
+        self.tempsActuel += self.horloge.tick(Constants.FPS)
         # On parcoure le dictionnaire de connexions
         for canal in self.connexions:
             if self.attenteSecureReseau.get(canal) and self.attenteSecureReseau[canal] and not self.ackRecus[canal] \
-                    and self.ack_timer.expired(self.current_time):
+                    and self.ack_timer.expired(self.tempsActuel):
                 # Pas de ack recu --> on envoi a nouveau le message
                 donnees = self.messagesSecures[canal][0][0]
-
-                if self.commUDP:
-                    self.canal.sendto(donnees, canal)
-                else:
-                    self.envoiSnakeChann(donnees, canal)
+                self.envoiSnakeChann(donnees, canal, self.derniereSeq[canal])
 
             elif self.messagesSecures.get(canal) and self.messagesSecures[canal] \
                     and not self.attenteSecureReseau[canal]:
@@ -194,12 +211,8 @@ class snakePost(snakeChannel):
                     # Attente du ack pour pouvoir envoyer un nouveau message secure
                     self.ackRecus[canal] = False
                     self.attenteSecureReseau[canal] = True
-
-                    if self.commUDP:
-                        self.canal.sendto(donnees, canal)
-                    else:
-                        self.envoiSnakeChann(donnees, canal)
-                        print donnees
+                    self.envoiSnakeChann(donnees, canal, self.derniereSeq[canal])
+                    print donnees
 
                     # timer pour les messages securises
                     self.ack_timer.activate(0)
@@ -207,11 +220,7 @@ class snakePost(snakeChannel):
                 if self.messagesNormaux.get(canal) and \
                         self.messagesNormaux[canal]:
                     donnees = self.messagesNormaux[canal].pop(0)[0]
-
-                    if self.commUDP:
-                        self.canal.sendto(donnees, canal)
-                    else:
-                        self.envoiSnakeChann(donnees, canal)
+                    self.envoiSnakeChann(donnees, canal, self.derniereSeq[canal])   # sa sent le rouci
 
     def initialisation(self, canal):
         """
@@ -233,3 +242,26 @@ class snakePost(snakeChannel):
             self.ackRecus[canal] = None
         if not self.attenteSecureReseau.get(canal):
             self.attenteSecureReseau[canal] = None
+
+    def ack(self, numSeq, canal):
+        """Send an ack
+
+        :param numSeq: sequence number
+        :param canal: destination
+        :return:
+        """
+        pack = struct.pack('>2H', 0, numSeq)
+        # When sending the ack, send data with the ack, if any
+        if self.messagesSecures.get(canal) and \
+                not self.attenteSecureReseau.get(canal):
+            # Secure message
+            # Set a random numSeq
+            pack = struct.pack('>2H', self.derniereSeq[canal][0], numSeq)
+            pack += self.messagesSecures[canal][0][0]
+            self.attenteSecureReseau[canal] = True
+            self.ackRecus[canal] = False
+        elif self.messagesNormaux.get(canal):
+            # Normal message
+            pack += self.messagesNormaux[canal].pop(0)[0]
+
+        self.envoiSnakeChann(pack, canal,numSeq)

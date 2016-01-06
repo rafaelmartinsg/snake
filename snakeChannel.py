@@ -151,6 +151,7 @@ class snakeChannel(object):
             self.connexionsNonEtablies[host] = (self.connexionsNonEtablies[host] + 1) % (0x1 << 32)
         else:
             # Si n°sequence = 0xFFFFFFFF -> phase de connexion
+            print self.connexionsNonEtablies[host]
             self.connexionsNonEtablies[host] = sequence
 
         # Pack le numero de sequence
