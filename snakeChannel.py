@@ -118,6 +118,7 @@ class snakeChannel(object):
         """
         try:
             donnees, host = self.canal.recvfrom(BUFFER_SIZE)
+            #print donnees
         except socket.error:
             return None, None
         try:
@@ -142,7 +143,7 @@ class snakeChannel(object):
                        - host      : tuple avec adresse IP et n°port
                        - sequence  : contient le numero de sequence
     '''
-    def envoiSnakeChann(self, donnees, host, sequence):
+    def envoiSnakeChann(self, donnees, host, sequence=None):
         if self.connexionsNonEtablies.get(host) is None:
             self.connexionsNonEtablies[host] = SEQUENCE_OUTBAND
 

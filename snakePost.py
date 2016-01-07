@@ -54,6 +54,7 @@ class snakePost(snakeChannel):
         self.numSeq = 0
         self.horloge = pygame.time.Clock()
         self.tempsActuel = 0
+        self.timerAck = Timer(INTERVAL_ACK, 0 , True)
 
     def gestionMessages(self, donnees, canal):
         """
@@ -199,7 +200,7 @@ class snakePost(snakeChannel):
         # On parcoure le dictionnaire de connexions
         for canal in self.connexions:
             if self.attenteSecureReseau.get(canal) and self.attenteSecureReseau[canal] and not self.ackRecus[canal] \
-                    and self.ack_timer.expired(self.tempsActuel):
+                    and self.timerAck.expired(self.tempsActuel):
                 # Pas de ack recu --> on envoi a nouveau le message
                 donnees = self.messagesSecures[canal][0][0]
                 self.envoiSnakeChann(donnees, canal, self.derniereSeq[canal])
@@ -215,7 +216,7 @@ class snakePost(snakeChannel):
                     print donnees
 
                     # timer pour les messages securises
-                    self.ack_timer.activate(0)
+                    self.timerAck.activate(0)
             else:   # message normaux
                 if self.messagesNormaux.get(canal) and \
                         self.messagesNormaux[canal]:
@@ -264,4 +265,4 @@ class snakePost(snakeChannel):
             # Normal message
             pack += self.messagesNormaux[canal].pop(0)[0]
 
-        self.envoiSnakeChann(pack, canal,numSeq)
+        self.envoiSnakeChann(pack, canal)

@@ -38,6 +38,8 @@ class Client(snakePost):
         # self.send_timer = Timer(SEND_INTERVAL, 0, True)
 
         self.listBody = []
+        self.snakes = {}
+        self.listFood = []
 
         # get preferences
         self.preferences = Preferences()
@@ -89,7 +91,7 @@ class Client(snakePost):
         self.new_apple_timer = Timer(Constants.NEW_APPLE_PERIOD*1000, self.current_time, periodic=True)
 
     def process_events(self):
-        # key handling
+        # cle handling
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
@@ -119,12 +121,13 @@ class Client(snakePost):
                 self.me.restart()
 
             # check if game need more food
-            if self.new_apple_timer.expired(self.current_time):
-                self.f.make()
+            # if self.new_apple_timer.expired(self.current_time):
+            #     self.f.make()
 
             # check if we need to move our own snake's state if we do, send an update of our position to the server
             if self.move_snake_timer.expired(self.current_time):
                 self.me.move()
+                self.msgBody_p()
 
             # check if we need to blink the unready snakes (unready state)
             if self.blink_snake_timer.expired(self.current_time):
@@ -144,45 +147,87 @@ class Client(snakePost):
 
             # draw all snakes positions as last seen by the server
             # we do not compute their positions ourselves!
-            self.me.draw(self.gamescreen)
+            # self.me.draw(self.gamescreen)
+            for cle in self.snakes:
+                self.snakes[cle].draw(self.gamescreen)
 
             # draw food
             self.f.draw(self.gamescreen)
 
-            # process external events (keyboard,...)
+            # process external events (cleboard,...)
             self.process_events()
 
             # then update display, update game area on screen container
             self.screen.blit(self.gamescreen, (self.score_width, 0))
-            print(self.me.body)
+            #print(self.me.body)
             pygame.display.update()
 
             data, host = self.ecouteClient()
             if data is not None:
-                print(data)
                 donneeJson = json.loads(data)
                 print(donneeJson)
+                for cle in donneeJson:
+                    print cle
+                    if cle == "foods":
+                        self.f.set_positions(donneeJson[cle])
+                    elif cle == "snakes":
+                            for players_info in self.snakes.keys():
+                                present = False
+                                for donnes in donneeJson[cle]:
+                                    if donnes[0] == players_info:
+                                        present = True
+                                if not present:
+                                    del self.snakes[players_info]
+                                    self.scores.del_score(players_info)
+                            for players_info in donneeJson[cle]:
+                                if self.snakes.get(players_info[0]):
+                                    print players_info
+                                    self.snakes[players_info[0]].setBody(players_info[1])
+                    elif cle == "players_info":
+                        for players_info in donneeJson[cle]:
+                            if not self.snakes.get(players_info[0]):
+
+                                self.snakes[players_info[0]]= Snake(color=pygame.color.THECOLORS[players_info[1]],
+                                                                    nickname=players_info[0])
+                                self.scores.new_score(players_info[0],self.snakes[players_info[0]].color,players_info[2])
+                            else:
+                                if players_info[3]:
+                                    self.snakes[players_info[0]].set_ready()
+                                else:
+                                    self.snakes[players_info[0]].set_unready()
+                            self.scores.set_score(players_info[0], players_info[2])
+                    elif cle == 'game_over':
+                        if donneeJson[cle] == self.nickname:
+                            self.snakes[donneeJson[cle]].restart()
+                            self.me.restart()
+                            self.snakes[donneeJson[cle]].set_unready()
+                        elif cle == 'grow':
+                            if donneeJson[cle] == self.nickname:
+                                self.me.grow(Constants.GROW)
+                        break
 
     # Methode qui envoie la liste qui contient les coordonnées du corp d'un serpent
     # envoie non securisé. listBody => contient les positions des différentes parties du corps
     def msgBody_p(self):
         # formatage des données en JSON
-        if self.listBody[0] == None:
+        send = None
+        if self.me.body[0] == None:
             print "liste des corps vides"
         else:
-            send = json.dumps({'body_p':self.listBody})
+            send = json.dumps({'body_p' : self.me.body})
         # envoie non sécurisé, a verif
-        self.envoiNonSecure(self.sClient, send, (self.addIP, self.nPort))
-        pass
+        #print send
+        self.envoiSnakePost(send, self.canal, False)
+
     # methode qui envoie un message qui dit au serveur si on est ready ou pas
     def msgReady(self):
         # formatage des données en JSON
         #send = '{"ready":"'+True+'"}'
         msg = {'ready':True}
         send = json.dumps(msg)
+        print send
         # envoie fiable
-        self.envoiSnakePost(send,self.canal,True)
-        pass
+        self.envoiSnakePost(send, self.canal, True)
 
 if __name__ == "__main__":
-    Client(UDP_ADD_IP, UDP_NUM_PORT, "green", "Rafael").run()
+    Client(UDP_ADD_IP, UDP_NUM_PORT, "red", "Rafael").run()
