@@ -14,6 +14,7 @@ C_LASTP = 2     # Dernier ping
 C_COULEUR = 3   # Couleur du joueur
 C_NICKNAME = 4  # Nickname du joueur
 MAX_CLIENT = 10
+INTERVAL_ACK = 20
 
 UDP_ADD_IP = "129.194.186.177"
 UDP_NUM_PORT = 7777
