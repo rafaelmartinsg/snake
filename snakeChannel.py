@@ -118,7 +118,6 @@ class snakeChannel(object):
         """
         try:
             donnees, host = self.canal.recvfrom(BUFFER_SIZE)
-            #print donnees
         except socket.error:
             return None, None
         try:
@@ -134,7 +133,7 @@ class snakeChannel(object):
                         (self.connexions[host][C_SEQNUM] - numSquence) > (1 << 31))):
                 self.connexions[host][C_SEQNUM] = numSquence
                 return payload, host
-            return None, None
+            return None, host
         except:
             return None, None
 
@@ -152,7 +151,6 @@ class snakeChannel(object):
             self.connexionsNonEtablies[host] = (self.connexionsNonEtablies[host] + 1) % (0x1 << 32)
         else:
             # Si n°sequence = 0xFFFFFFFF -> phase de connexion
-            print self.connexionsNonEtablies[host]
             self.connexionsNonEtablies[host] = sequence
 
         # Pack le numero de sequence
@@ -173,8 +171,6 @@ class snakeChannel(object):
 
         :return:
         """
-        #print 'Serveur ecoute sur le port : ', self.nPort, '...'
-        #print "En attente de clients ..."
         try:
             donnees, client = self.receptionSnakeChann()
 
@@ -198,9 +194,6 @@ class snakeChannel(object):
                     separateur = token[1].split("\\")
                     couleur = separateur[6]
                     nickname = separateur[8]
-                    print "separateur == ", separateur
-                    print "couleur == ", couleur
-                    print "nickname == ", nickname
 
                     # Control de la valeur de B
                     if (len(separateur) < 3) or (int(self.A) != int(separateur[2])):
@@ -217,6 +210,5 @@ class snakeChannel(object):
                 # Client connecte
                 return donnees, client
         except socket.timeout:
-            # print 'Error timeout'
             pass
         return None, None

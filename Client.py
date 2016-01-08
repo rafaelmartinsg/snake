@@ -23,6 +23,8 @@ from banner import *
 from timer import *
 from snakePost import snakePost
 
+import pprint
+
 
 class Client(snakePost):
     def __init__(self, ip=UDP_ADD_IP, port=UDP_NUM_PORT, couleur="blue", nickname="invite", udp=False):
@@ -40,6 +42,8 @@ class Client(snakePost):
         self.listBody = []
         self.snakes = {}
         self.listFood = []
+        self.host = None
+        self.nickname = nickname
 
         # get preferences
         self.preferences = Preferences()
@@ -64,18 +68,16 @@ class Client(snakePost):
         self.scorescreen = pygame.Surface((self.score_width, Constants.RESOLUTION[1]))
 
         # Snake and foods manager
-        self.me = Snake(color=pygame.color.THECOLORS[self.preferences.get("color")],
-                        nickname=self.preferences.get("nickname"))
+        self.me = Snake(color=pygame.color.THECOLORS[self.couleur], nickname=self.nickname)
 
-        self.nickname = self.preferences.get("nickname")
+        # self.nickname = self.preferences.get("nickname")
         self.f = Foods()
 
         # Score manager
         self.scores = Scores((self.score_width, Constants.RESOLUTION[1]))
 
         # add our own score, the server will send us the remaining one at connection
-        self.scores.new_score(self.preferences.get("nickname"),
-                              pygame.color.THECOLORS[self.preferences.get("color")])
+        self.scores.new_score(self.nickname, pygame.color.THECOLORS[self.couleur])
 
         # game area background color
         self.gamescreen.fill(Constants.COLOR_BG)
@@ -109,20 +111,10 @@ class Client(snakePost):
                     self.me.set_ready()
 
     def run(self):
-        whole_second = 0
         self.running = True
         while self.running:
             # time tracking
             self.current_time += self.clock.tick(Constants.FPS)
-
-            # check if the snake is still alive
-            if not self.me.alive:
-                self.me.alive = True
-                self.me.restart()
-
-            # check if game need more food
-            # if self.new_apple_timer.expired(self.current_time):
-            #     self.f.make()
 
             # check if we need to move our own snake's state if we do, send an update of our position to the server
             if self.move_snake_timer.expired(self.current_time):
@@ -131,13 +123,10 @@ class Client(snakePost):
 
             # check if we need to blink the unready snakes (unready state)
             if self.blink_snake_timer.expired(self.current_time):
-                self.me.blink()
-
-            # check if snake has eaten
-            if self.me.ready:
-                if self.f.check(self.me.head):
-                    self.me.grow(Constants.GROW)
-                    self.scores.inc_score(self.nickname, 1)
+                try:
+                    self.snakes[self.nickname].blink()
+                except:
+                    pass
 
             # cleanup background
             self.gamescreen.fill(Constants.COLOR_BG)
@@ -159,15 +148,13 @@ class Client(snakePost):
 
             # then update display, update game area on screen container
             self.screen.blit(self.gamescreen, (self.score_width, 0))
-            #print(self.me.body)
+
             pygame.display.update()
 
-            data, host = self.ecouteClient()
+            data, self.host = self.ecouteClient()
             if data is not None:
                 donneeJson = json.loads(data)
-                print(donneeJson)
                 for cle in donneeJson:
-                    print cle
                     if cle == "foods":
                         self.f.set_positions(donneeJson[cle])
                     elif cle == "snakes":
@@ -181,7 +168,6 @@ class Client(snakePost):
                                     self.scores.del_score(players_info)
                             for players_info in donneeJson[cle]:
                                 if self.snakes.get(players_info[0]):
-                                    print players_info
                                     self.snakes[players_info[0]].setBody(players_info[1])
                     elif cle == "players_info":
                         for players_info in donneeJson[cle]:
@@ -201,33 +187,35 @@ class Client(snakePost):
                             self.snakes[donneeJson[cle]].restart()
                             self.me.restart()
                             self.snakes[donneeJson[cle]].set_unready()
-                        elif cle == 'grow':
-                            if donneeJson[cle] == self.nickname:
-                                self.me.grow(Constants.GROW)
-                        break
+                    elif cle == 'grow':
+                        self.me.grow(Constants.GROW)
+                        self.scores.inc_score(donneeJson[cle], 1)
+                    break
 
-    # Methode qui envoie la liste qui contient les coordonnées du corp d'un serpent
-    # envoie non securisé. listBody => contient les positions des différentes parties du corps
+            self.gestionEvennement()
+
+
     def msgBody_p(self):
+        """
+
+        Methode qui envoie la liste qui contient les coordonnées du corp d'un serpent envoie non securisé.
+        listBody => contient les positions des différentes parties du corps
+        :return:
+        """
         # formatage des données en JSON
         send = None
         if self.me.body[0] == None:
             print "liste des corps vides"
         else:
             send = json.dumps({'body_p' : self.me.body})
-        # envoie non sécurisé, a verif
-        #print send
-        self.envoiSnakePost(send, self.canal, False)
+        self.envoiSnakePost(send, self.host, False)
 
     # methode qui envoie un message qui dit au serveur si on est ready ou pas
     def msgReady(self):
         # formatage des données en JSON
-        #send = '{"ready":"'+True+'"}'
         msg = {'ready':True}
-        send = json.dumps(msg)
-        print send
         # envoie fiable
-        self.envoiSnakePost(send, self.canal, True)
+        self.envoiSnakePost(json.dumps(msg), self.host, True)
 
 if __name__ == "__main__":
     Client(UDP_ADD_IP, UDP_NUM_PORT, "red", "Rafael").run()

@@ -74,10 +74,8 @@ class snakePost(snakeChannel):
             seq = struct.unpack('>H', donnees[:2])[0]
             ack = struct.unpack('>H', donnees[2:4])[0]
 
-            print "SEQ_NUMBER : " + str(seq) + " - ACK_NUMBER " + str(ack)
-
             # Message secure --> il faut ack
-            if seq != 0 and ack == 0:
+            if seq != 0 :
                 self.ack(seq, canal)
 
             # Lorsque l'on recoit un ack
@@ -145,13 +143,11 @@ class snakePost(snakeChannel):
         self.initialisation(canal)
         if not secure:
             self.messagesNormaux[canal].append((struct.pack('>2H', 0, 0) + donnees, canal))
-            # print "[send] Not secure : donnees = ", donnees, " - to : ", canal
         else:
             if len(self.messagesSecures[canal]) < MAX_CLIENT:
                 self.derniereSeq[canal].append(random.randint(1, (1 << 16) - 1))
                 self.messagesSecures[canal].append(
                     (struct.pack('>2H', self.derniereSeq[canal][-1], 0) + donnees, canal))
-                print "NUM_SEQ : " + str(self.derniereSeq[canal][-1]) + " - ACK " + str(0)
             else:
                 print "Buffer est plein, ..."
 
@@ -179,13 +175,9 @@ class snakePost(snakeChannel):
         :return None, None: dans le cas ou les donnees ou le canal sont incorrects
         :return payload, canal: donnes a envoyer et sur quel canal on communique
         """
-        #donnees, canal = self.serveurConnexion()
         donnees, canal = self.receptionSnakeChann()
-        if donnees is not None and canal is not None:
-            payload = self.gestionMessages(donnees, canal)
-            return payload, canal
-        else:
-            return None, None
+        payload = self.gestionMessages(donnees, canal)
+        return payload, canal
 
     def gestionEvennement(self):
         """
@@ -199,29 +191,25 @@ class snakePost(snakeChannel):
         self.tempsActuel += self.horloge.tick(Constants.FPS)
         # On parcoure le dictionnaire de connexions
         for canal in self.connexions:
-            if self.attenteSecureReseau.get(canal) and self.attenteSecureReseau[canal] and not self.ackRecus[canal] \
-                    and self.timerAck.expired(self.tempsActuel):
+            if self.attenteSecureReseau.get(canal) and self.timerAck.expired(self.tempsActuel):
                 # Pas de ack recu --> on envoi a nouveau le message
                 donnees = self.messagesSecures[canal][0][0]
-                self.envoiSnakeChann(donnees, canal, self.derniereSeq[canal])
+                self.envoiSnakeChann(donnees, canal)
 
-            elif self.messagesSecures.get(canal) and self.messagesSecures[canal] \
-                    and not self.attenteSecureReseau[canal]:
+            elif self.messagesSecures.get(canal) and not self.attenteSecureReseau[canal]:
                 donnees = self.messagesSecures[canal][0][0]
                 if not self.attenteSecureReseau[canal]:
                     # Attente du ack pour pouvoir envoyer un nouveau message secure
                     self.ackRecus[canal] = False
                     self.attenteSecureReseau[canal] = True
-                    self.envoiSnakeChann(donnees, canal, self.derniereSeq[canal])
-                    print donnees
+                    self.envoiSnakeChann(donnees, canal)
 
                     # timer pour les messages securises
                     self.timerAck.activate(0)
             else:   # message normaux
-                if self.messagesNormaux.get(canal) and \
-                        self.messagesNormaux[canal]:
+                if self.messagesNormaux.get(canal):
                     donnees = self.messagesNormaux[canal].pop(0)[0]
-                    self.envoiSnakeChann(donnees, canal, self.derniereSeq[canal])   # sa sent le rouci
+                    self.envoiSnakeChann(donnees, canal)   # sa sent le rouci
 
     def initialisation(self, canal):
         """
