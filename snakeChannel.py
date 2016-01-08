@@ -36,7 +36,7 @@ class snakeChannel(object):
         self.canal.settimeout(0.1)
         self.couleur = couleur
         self.nickname = nickname
-        self.A = 0
+        self.a = 0
 
         self.connexions = {}
         self.connexionsNonEtablies = {}
@@ -56,14 +56,14 @@ class snakeChannel(object):
         :return False: probleme pendant la phase de connexion
         """
         etat = 0
-        A = random.randint(0, (1 << 32) - 1)
-        B = 0
+        a = random.randint(0, (1 << 32) - 1)
+        b = 0
 
         while etat < 3:
             if etat == 0:
-                self.envoiSnakeChann("GetToken " + str(A) + " Snake", (self.addIP, self.nPort),
+                self.envoiSnakeChann("GetToken " + str(a) + " Snake", (self.addIP, self.nPort),
                                      SEQUENCE_OUTBAND)
-                print "Client envoi : GetToken", A, "Snake"
+                print "Client envoi : GetToken", a, "Snake"
                 etat += 1
             elif etat == 1:
                 controlToken, client = self.receptionSnakeChann()
@@ -73,13 +73,13 @@ class snakeChannel(object):
                 else:
                     token = controlToken.split()
                     # Controle du A recu
-                    if token[2] == str(A):
-                        B = token[1]
+                    if token[2] == str(a):
+                        b = token[1]
                         pNum = token[3]
-                        self.envoiSnakeChann("Connect \\challenge\\" + str(B) + "\\protocol\\" + str(pNum) +
+                        self.envoiSnakeChann("Connect \\challenge\\" + str(b) + "\\protocol\\" + str(pNum) +
                                              "\\color\\" + str(self.couleur) + "\\nickname\\" + str(self.nickname),
                                              (self.addIP, self.nPort), SEQUENCE_OUTBAND)
-                        print "Client envoi : Connect \challenge\\", B, \
+                        print "Client envoi : Connect \challenge\\", b, \
                             "\\protocol\\", pNum, "\\color\\", str(self.couleur), "\\nickname\\", str(self.nickname)
                         etat += 1
                     else:
@@ -94,8 +94,8 @@ class snakeChannel(object):
                     etat -= 1
                 else:
                     token = controlConnexion.split()
-                    print B
-                    if B == token[1]:
+                    print b
+                    if b == token[1]:
                         etat += 1
                         return True
             else:
@@ -136,13 +136,15 @@ class snakeChannel(object):
             return None, host
         except:
             return None, None
-
-    '''                            envoiSnakeChann
-        Parametres :   - donnees   : continent les donnes a envoyer
-                       - host      : tuple avec adresse IP et n°port
-                       - sequence  : contient le numero de sequence
-    '''
+        
     def envoiSnakeChann(self, donnees, host, sequence=None):
+        """
+
+        :param donnees: continent les donnes a envoyer
+        :param host: tuple avec adresse IP et n°port
+        :param sequence: contient le numero de sequence
+        :return:
+        """
         if self.connexionsNonEtablies.get(host) is None:
             self.connexionsNonEtablies[host] = SEQUENCE_OUTBAND
 
@@ -161,8 +163,9 @@ class snakeChannel(object):
 
     def serveurConnexion(self):
         """
+
         Methode qui s'occupe de la phase de connexion entre un client et un serveur
-       Les messages sont definit par le cahier des charges, de la manière suivante :
+        Les messages sont definit par le cahier des charges, de la manière suivante :
            RX  :   0xFFFFFFFF (numero de sequence OUTBAND pour initier la connexion)
            RX  :   GetToken A Snake
            TX  :   Token B A ProtocoleNumber
@@ -183,12 +186,12 @@ class snakeChannel(object):
                 if token[0] == "GetToken":
                     self.connexions[client][C_SEQNUM] = 0
                     # Generation de B de la meme sorte que A
-                    self.A = random.randint(0, (1 << 32) - 1)
-                    B = token[1]
+                    self.a = random.randint(0, (1 << 32) - 1)
+                    b = token[1]
 
-                    self.envoiSnakeChann("Token " + str(self.A) + " " + str(B) + " " + str(PNUM), client,
+                    self.envoiSnakeChann("Token " + str(self.a) + " " + str(b) + " " + str(PNUM), client,
                                          SEQUENCE_OUTBAND)
-                    print "Serveur envoi : Token ", self.A, " ", B, " ", PNUM
+                    print "Serveur envoi : Token ", self.a, " ", b, " ", PNUM
 
                 elif token[0] == "Connect":
                     separateur = token[1].split("\\")
@@ -196,15 +199,15 @@ class snakeChannel(object):
                     nickname = separateur[8]
 
                     # Control de la valeur de B
-                    if (len(separateur) < 3) or (int(self.A) != int(separateur[2])):
+                    if (len(separateur) < 3) or (int(self.a) != int(separateur[2])):
                         print "Suivant... !"
                         return None, None
 
-                    self.envoiSnakeChann("Connected " + str(self.A), client, SEQUENCE_OUTBAND)
+                    self.envoiSnakeChann("Connected " + str(self.a), client, SEQUENCE_OUTBAND)
                     self.connexions[client][C_STATUS] = True
                     self.connexions[client][C_COULEUR] = couleur
                     self.connexions[client][C_NICKNAME] = nickname
-                    print "Serveur envoi : Connected ", self.A
+                    print "Serveur envoi : Connected ", self.a
                 print "En attente de clients ..."
             else:
                 # Client connecte
