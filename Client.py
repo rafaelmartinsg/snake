@@ -27,14 +27,14 @@ import pprint
 
 
 class Client(snakePost):
-    def __init__(self, ip=UDP_ADD_IP, port=UDP_NUM_PORT, couleur="blue", nickname="invite", udp=False):
-        super(Client, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM), ip, port, couleur, nickname, udp)
+    def __init__(self, ip=UDP_ADD_IP, port=UDP_NUM_PORT, couleur="blue", nickname="invite"):
+        super(Client, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM), ip, port, couleur, nickname)
         self.addIP = ip
         self.nPort = int(port)
 
         pygame.init()
-        self.clock = pygame.time.Clock()
-        self.current_time = 0
+        # self.clock = pygame.time.Clock()
+        # self.current_time = 0
         self.clientConnexion()
         print "Connected"
         # self.send_timer = Timer(SEND_INTERVAL, 0, True)
@@ -122,11 +122,10 @@ class Client(snakePost):
                 self.msgBody_p()
 
             # check if we need to blink the unready snakes (unready state)
+            print "nique ta mere"
             if self.blink_snake_timer.expired(self.current_time):
-                try:
-                    self.snakes[self.nickname].blink()
-                except:
-                    pass
+                for s in self.snakes:
+                    self.snakes[s].blink()
 
             # cleanup background
             self.gamescreen.fill(Constants.COLOR_BG)
@@ -150,10 +149,12 @@ class Client(snakePost):
             self.screen.blit(self.gamescreen, (self.score_width, 0))
 
             pygame.display.update()
+            self.gestionEvennement()
 
             data, self.host = self.ecouteClient()
             if data is not None:
                 donneeJson = json.loads(data)
+                print donneeJson
                 for cle in donneeJson:
                     if cle == "foods":
                         self.f.set_positions(donneeJson[cle])
@@ -192,7 +193,7 @@ class Client(snakePost):
                         self.scores.inc_score(donneeJson[cle], 1)
                     break
 
-            self.gestionEvennement()
+
 
 
     def msgBody_p(self):
