@@ -5,7 +5,7 @@
 #   Auteurs         :   Gerber Cedric
 #                       Martins Gomes Rafael
 #   Date de debut   :   28 septembre 2015
-#   Date de fin     :   08 janvier 2016
+#   Date de fin     :   10 janvier 2016
 #   Etablissement   :   hepia
 #   Filiere         :   3eme ITI
 #   Cours           :   Reseau I
@@ -23,27 +23,23 @@ from banner import *
 from timer import *
 from snakePost import snakePost
 
-import pprint
-
 
 class Client(snakePost):
-    def __init__(self, ip=UDP_ADD_IP, port=UDP_NUM_PORT, couleur="blue", nickname="invite"):
-        super(Client, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM), ip, port, couleur, nickname)
+    def __init__(self, ip=UDP_ADD_IP, port=UDP_NUM_PORT, couleur="blue", nickname="invite", udp=False):
+        super(Client, self).__init__(socket.socket(socket.AF_INET, socket.SOCK_DGRAM), ip, port, couleur, nickname, udp)
         self.addIP = ip
         self.nPort = int(port)
 
         pygame.init()
-        # self.clock = pygame.time.Clock()
-        # self.current_time = 0
         self.clientConnexion()
         print "Connected"
-        # self.send_timer = Timer(SEND_INTERVAL, 0, True)
 
         self.listBody = []
         self.snakes = {}
         self.listFood = []
         self.host = None
         self.nickname = nickname
+        self.ready = False
 
         # get preferences
         self.preferences = Preferences()
@@ -107,8 +103,11 @@ class Client(snakePost):
                 if event.key == pygame.K_RIGHT:
                     self.me.action(4)
                 if event.key == pygame.K_SPACE:
-                    self.msgReady()
-                    self.me.set_ready()
+                    if not self.ready:
+                        self.msgReady()
+                        self.me.set_ready()
+                    else:
+                        print "Le joueur : " + self.nickname + " est deja 'ready'."
 
     def run(self):
         self.running = True
@@ -121,8 +120,6 @@ class Client(snakePost):
                 self.me.move()
                 self.msgBody_p()
 
-            # check if we need to blink the unready snakes (unready state)
-            print "nique ta mere"
             if self.blink_snake_timer.expired(self.current_time):
                 for s in self.snakes:
                     self.snakes[s].blink()
@@ -154,7 +151,6 @@ class Client(snakePost):
             data, self.host = self.ecouteClient()
             if data is not None:
                 donneeJson = json.loads(data)
-                print donneeJson
                 for cle in donneeJson:
                     if cle == "foods":
                         self.f.set_positions(donneeJson[cle])
@@ -215,7 +211,8 @@ class Client(snakePost):
     def msgReady(self):
         # formatage des données en JSON
         msg = {'ready':True}
-        # envoie fiable
+        self.ready = True
+        # envoi fiable --> fiable = True
         self.envoiSnakePost(json.dumps(msg), self.host, True)
 
 if __name__ == "__main__":
