@@ -183,6 +183,7 @@ class Client(snakePost):
                         if donneeJson[cle] == self.nickname:
                             self.snakes[donneeJson[cle]].restart()
                             self.me.restart()
+                            self.ready = False
                             self.snakes[donneeJson[cle]].set_unready()
                     elif cle == 'grow':
                         self.me.grow(Constants.GROW)
