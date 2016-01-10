@@ -12,6 +12,7 @@
 #
 #   Nom fichier     :   Client.py
 # ##############################################################################
+import sys
 import socket  # Import socket module
 
 from constants import *
@@ -103,8 +104,8 @@ class Client(snakePost):
                 if event.key == pygame.K_RIGHT:
                     self.me.action(4)
                 if event.key == pygame.K_SPACE:
+                    self.msgReady()
                     if not self.ready:
-                        self.msgReady()
                         self.me.set_ready()
                     else:
                         print "Le joueur : " + self.nickname + " est deja 'ready'."

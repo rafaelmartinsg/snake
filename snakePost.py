@@ -162,7 +162,7 @@ class snakePost(snakeChannel):
     def ecouteClient(self):
         """
 
-        Methode qui met le serveur en ecoute de nouveaux messages. via la fonction "serveurConnexion" (snakeChannel)
+        Methode qui met le client en ecoute de nouveaux messages. via la fonction "receptionSnakeChann"
 
         Lors de la reception d'un nouveau message, on fait appel a la fonction "gestionMessages" afin de traiter le
             nouveau contenu recu.
